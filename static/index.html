@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoiceDesk — La Bella Ristorante</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --accent: #c8973a;
+      --accent2: #e8b45a;
+      --text: #eeeef0;
+      --muted: #888899;
+      --user-bubble: #2a2a3e;
+      --agent-bubble: #1e2a1e;
+      --red: #e05555;
+      --green: #55c55a;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    header .logo { font-size: 1.4rem; }
+    header h1 { font-size: 1.1rem; font-weight: 600; color: var(--accent2); }
+    header span { font-size: 0.8rem; color: var(--muted); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted);
+      margin-left: auto;
+      transition: background 0.3s;
+    }
+    .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.speaking { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 1s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    /* Chat window */
+    #chat {
+      flex: 1;
+      min-height: 300px;
+      max-height: 55vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .bubble {
+      max-width: 82%;
+      padding: 0.65rem 1rem;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--user-bubble);
+      border-bottom-right-radius: 4px;
+      color: #d0d0e8;
+    }
+    .bubble.agent {
+      align-self: flex-start;
+      background: var(--agent-bubble);
+      border-bottom-left-radius: 4px;
+      color: #c8e8c8;
+    }
+    .bubble.system {
+      align-self: center;
+      background: transparent;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .bubble .label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Visualiser */
+    .vis-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 64px;
+      gap: 3px;
+    }
+    .bar {
+      width: 4px;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: height 0.08s ease;
+      min-height: 4px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    #mic-btn {
+      flex: 1;
+      padding: 0.9rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    #mic-btn:hover { background: var(--border); }
+    #mic-btn.listening {
+      background: rgba(200, 151, 58, 0.15);
+      border-color: var(--accent);
+      color: var(--accent2);
+      animation: glow 1.5s infinite;
+    }
+    #mic-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+
+    @keyframes glow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(200,151,58,0); }
+      50% { box-shadow: 0 0 0 6px rgba(200,151,58,0.2); }
+    }
+
+    #end-btn {
+      padding: 0.9rem 1.2rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: rgba(224, 85, 85, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(224,85,85,0.3);
+      transition: all 0.2s;
+    }
+    #end-btn:hover { background: rgba(224,85,85,0.25); }
+
+    /* Interim transcript badge */
+    #interim {
+      font-size: 0.82rem;
+      color: var(--muted);
+      min-height: 1.2em;
+      text-align: center;
+      font-style: italic;
+      padding: 0 0.5rem;
+    }
+
+    /* Info panel */
+    .info-toggle {
+      font-size: 0.78rem;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: center;
+      padding: 0.25rem;
+      user-select: none;
+    }
+    .info-toggle:hover { color: var(--accent2); }
+    #info-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: none;
+      line-height: 1.6;
+    }
+    #info-panel.open { display: block; }
+    #info-panel h3 { color: var(--accent2); margin-bottom: 0.4rem; font-size: 0.85rem; }
+
+    /* Bookings panel */
+    #bookings-section {
+      margin-top: 0.5rem;
+    }
+    #bookings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    #bookings-table th {
+      color: var(--muted);
+      text-align: left;
+      padding: 0.3rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    #bookings-table td {
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    footer {
+      padding: 0.75rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">🍝</span>
+  <div>
+    <h1>VoiceDesk</h1>
+    <span>La Bella Ristorante &mdash; Sofia</span>
+  </div>
+  <div class="status-dot" id="status-dot" title="Disconnected"></div>
+</header>
+
+<div class="container">
+
+  <!-- Chat transcript -->
+  <div id="chat">
+    <div class="bubble system">Click "Start Call" to connect to Sofia, your voice assistant.</div>
+  </div>
+
+  <!-- Waveform visualiser -->
+  <div class="vis-wrap" id="visualiser"></div>
+
+  <!-- Interim transcript -->
+  <div id="interim"></div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button id="mic-btn" onclick="toggleCall()">
+      <span id="btn-icon">📞</span>
+      <span id="btn-label">Start Call</span>
+    </button>
+    <button id="end-btn" onclick="endCall()" style="display:none">End Call</button>
+  </div>
+
+  <!-- Info toggle -->
+  <div class="info-toggle" onclick="toggleInfo()">▼ Restaurant info &amp; bookings</div>
+  <div id="info-panel">
+    <h3>La Bella Ristorante</h3>
+    <div id="restaurant-info">Loading…</div>
+    <br>
+    <h3>Bookings today</h3>
+    <table id="bookings-table">
+      <thead><tr><th>Name</th><th>Party</th><th>Date</th><th>Time</th></tr></thead>
+      <tbody id="bookings-body"><tr><td colspan="4" style="color:var(--muted)">No bookings yet.</td></tr></tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>VoiceDesk &mdash; Powered by Groq + ElevenLabs + Web Speech API</footer>
+
+<audio id="audio-player" style="display:none"></audio>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────
+const WS_URL = `ws://${location.host}/ws/voice`;
+
+// ── State ─────────────────────────────────────────────────────────────────
+let ws = null;
+let recognition = null;
+let isListening = false;
+let agentSpeaking = false;
+let sessionActive = false;
+let audioQueue = [];
+let playingAudio = false;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const chat = document.getElementById('chat');
+const interim = document.getElementById('interim');
+const micBtn = document.getElementById('mic-btn');
+const endBtn = document.getElementById('end-btn');
+const btnIcon = document.getElementById('btn-icon');
+const btnLabel = document.getElementById('btn-label');
+const statusDot = document.getElementById('status-dot');
+const audioPlayer = document.getElementById('audio-player');
+
+// ── Waveform bars ─────────────────────────────────────────────────────────
+const NUM_BARS = 24;
+const vis = document.getElementById('visualiser');
+const bars = [];
+for (let i = 0; i < NUM_BARS; i++) {
+  const b = document.createElement('div');
+  b.className = 'bar';
+  b.style.height = '4px';
+  vis.appendChild(b);
+  bars.push(b);
+}
+
+let visInterval = null;
+function startVis(type) {
+  stopVis();
+  visInterval = setInterval(() => {
+    bars.forEach((b, i) => {
+      const base = type === 'listening' ? 24 : 10;
+      const amp = type === 'listening' ? 32 : 48;
+      const phase = (Date.now() / 120 + i * 0.8) % (Math.PI * 2);
+      const h = base + Math.abs(Math.sin(phase) * amp * (0.5 + 0.5 * Math.random()));
+      b.style.height = `${Math.min(h, 60)}px`;
+      b.style.background = type === 'listening' ? 'var(--accent)' : 'var(--green)';
+    });
+  }, 80);
+}
+function stopVis() {
+  clearInterval(visInterval);
+  bars.forEach(b => { b.style.height = '4px'; b.style.background = 'var(--accent)'; });
+}
+
+// ── Chat helpers ──────────────────────────────────────────────────────────
+function addBubble(role, text) {
+  const wrap = document.createElement('div');
+  wrap.className = `bubble ${role}`;
+  if (role !== 'system') {
+    const lbl = document.createElement('div');
+    lbl.className = 'label';
+    lbl.textContent = role === 'user' ? 'You' : 'Sofia';
+    wrap.appendChild(lbl);
+  }
+  const msg = document.createElement('div');
+  msg.textContent = text;
+  wrap.appendChild(msg);
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  return wrap;
+}
+
+// ── Audio queue ───────────────────────────────────────────────────────────
+async function enqueueAudio(b64) {
+  audioQueue.push(b64);
+  if (!playingAudio) playNext();
+}
+
+async function playNext() {
+  if (audioQueue.length === 0) {
+    playingAudio = false;
+    agentSpeaking = false;
+    statusDot.className = 'status-dot connected';
+    if (sessionActive && !isListening) startRecognition();
+    return;
+  }
+  playingAudio = true;
+  agentSpeaking = true;
+  stopRecognition();
+  startVis('speaking');
+  statusDot.className = 'status-dot speaking';
+
+  const b64 = audioQueue.shift();
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: 'audio/mpeg' });
+  const url = URL.createObjectURL(blob);
+
+  audioPlayer.src = url;
+  audioPlayer.onended = () => {
+    URL.revokeObjectURL(url);
+    stopVis();
+    playNext();
+  };
+  audioPlayer.onerror = () => { stopVis(); playNext(); };
+  try { await audioPlayer.play(); } catch(e) { stopVis(); playNext(); }
+}
+
+// ── Speech recognition ────────────────────────────────────────────────────
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    addBubble('system', 'Web Speech API not supported in this browser. Try Chrome or Edge.');
+    return null;
+  }
+  const r = new SpeechRecognition();
+  r.lang = 'en-US';
+  r.interimResults = true;
+  r.continuous = false; // restart manually for reliability
+
+  r.onstart = () => {
+    isListening = true;
+    micBtn.classList.add('listening');
+    btnIcon.textContent = '🎙️';
+    btnLabel.textContent = 'Listening…';
+    startVis('listening');
+  };
+
+  r.onend = () => {
+    isListening = false;
+    stopVis();
+    micBtn.classList.remove('listening');
+    btnIcon.textContent = '📞';
+    btnLabel.textContent = 'Tap to speak';
+    interim.textContent = '';
+    // Auto-restart if session is active and agent is not speaking
+    if (sessionActive && !agentSpeaking) {
+      setTimeout(() => { if (sessionActive && !agentSpeaking) startRecognition(); }, 300);
+    }
+  };
+
+  r.onerror = (e) => {
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    console.warn('Speech error:', e.error);
+  };
+
+  r.onresult = (e) => {
+    let finalText = '';
+    let interimText = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalText += t;
+      else interimText += t;
+    }
+    interim.textContent = interimText || finalText;
+    if (finalText.trim()) {
+      interim.textContent = '';
+      sendTranscript(finalText.trim());
+    }
+  };
+
+  return r;
+}
+
+function startRecognition() {
+  if (!recognition) recognition = initRecognition();
+  if (!recognition || isListening || agentSpeaking) return;
+  try { recognition.start(); } catch(e) { /* already started */ }
+}
+
+function stopRecognition() {
+  if (recognition && isListening) {
+    try { recognition.stop(); } catch(e) {}
+  }
+  isListening = false;
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────────────
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+  ws.binaryType = 'arraybuffer';
+
+  ws.onopen = () => {
+    statusDot.className = 'status-dot connected';
+    addBubble('system', 'Connected. Waiting for Sofia…');
+    sessionActive = true;
+  };
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+
+    if (msg.type === 'greeting' || msg.type === 'reply') {
+      addBubble('agent', msg.text);
+      if (msg.audio_b64) enqueueAudio(msg.audio_b64);
+    } else if (msg.type === 'thinking') {
+      addBubble('system', 'Sofia is thinking…');
+    }
+  };
+
+  ws.onerror = () => {
+    addBubble('system', 'Connection error. Please refresh.');
+    cleanup();
+  };
+
+  ws.onclose = () => {
+    if (sessionActive) {
+      addBubble('system', 'Call ended.');
+      cleanup();
+    }
+  };
+}
+
+function sendTranscript(text) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  addBubble('user', text);
+  ws.send(JSON.stringify({ type: 'transcript', text }));
+}
+
+// ── Call control ──────────────────────────────────────────────────────────
+function toggleCall() {
+  if (!sessionActive) {
+    startCall();
+  } else {
+    // Push-to-talk style: tap to re-trigger mic manually
+    if (!isListening && !agentSpeaking) startRecognition();
+  }
+}
+
+function startCall() {
+  sessionActive = false; // will be set true on ws open
+  connectWS();
+  endBtn.style.display = 'block';
+  micBtn.classList.add('disabled');
+  btnLabel.textContent = 'Connecting…';
+
+  // Enable mic button once WS is open (handled in ws.onopen via sessionActive flag)
+  const poll = setInterval(() => {
+    if (sessionActive) {
+      micBtn.classList.remove('disabled');
+      btnLabel.textContent = 'Tap to speak';
+      btnIcon.textContent = '🎙️';
+      clearInterval(poll);
+    }
+  }, 200);
+}
+
+function endCall() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'end_session' }));
+    ws.close();
+  }
+  cleanup();
+  addBubble('system', 'Call ended. Refresh to start a new call.');
+  loadBookings(); // refresh booking table after call
+}
+
+function cleanup() {
+  sessionActive = false;
+  stopRecognition();
+  stopVis();
+  audioQueue = [];
+  playingAudio = false;
+  agentSpeaking = false;
+  statusDot.className = 'status-dot';
+  endBtn.style.display = 'none';
+  micBtn.classList.remove('listening', 'disabled');
+  btnIcon.textContent = '📞';
+  btnLabel.textContent = 'Start Call';
+}
+
+// ── Info panel ────────────────────────────────────────────────────────────
+function toggleInfo() {
+  const panel = document.getElementById('info-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    loadRestaurantInfo();
+    loadBookings();
+  }
+}
+
+async function loadRestaurantInfo() {
+  try {
+    const res = await fetch('/api/restaurant/1');
+    const data = await res.json();
+    document.getElementById('restaurant-info').innerHTML =
+      `<strong>${data.name}</strong><br>${data.hours}<br><br><em>Menu:</em><br>${data.menu_text.replace(/\n/g,'<br>')}`;
+  } catch(e) {}
+}
+
+async function loadBookings() {
+  try {
+    const res = await fetch('/api/bookings');
+    const bookings = await res.json();
+    const tbody = document.getElementById('bookings-body');
+    if (!bookings.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">No bookings yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = bookings.map(b =>
+      `<tr><td>${b.name}</td><td>${b.party_size}</td><td>${b.date}</td><td>${b.time}</td></tr>`
+    ).join('');
+  } catch(e) {}
+}
+</script>
+</body>
+</html>
