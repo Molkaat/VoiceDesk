@@ -1,606 +1,590 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VoiceDesk — La Bella Ristorante</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VoiceDesk — La Bella Ristorante</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf8f4;--s1:#ffffff;--s2:#f4f1eb;--s3:#ede9e0;
+  --b1:#e8e2d6;--b2:#d4cdc0;
+  --gold:#a07830;--gold2:#c49a48;--goldb:#fdf6e8;
+  --text:#1a1610;--textm:#7a7060;--texts:#b0a898;
+  --red:#c04838;--green:#3a8a40;--greenb:#edf7ee;
+  --accent:#b84030;
+}
+body{font-family:'DM Sans',sans-serif;background:#f0ede6;color:var(--text);min-height:100vh;margin:0;padding:0;}
+.phone-shell{width:100%;min-height:100vh;background:var(--bg);box-shadow:none;border-radius:0;overflow:hidden;display:flex;flex-direction:column;}
+.screen{display:none;flex-direction:column;flex:1;}
+.screen.active{display:flex;}
+#screen-calling,#screen-active{display:none!important;}
+#screen-calling.active,#screen-active.active{display:flex!important;}
 
-    :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface2: #22222e;
-      --border: #2e2e3e;
-      --accent: #c8973a;
-      --accent2: #e8b45a;
-      --text: #eeeef0;
-      --muted: #888899;
-      --user-bubble: #2a2a3e;
-      --agent-bubble: #1e2a1e;
-      --red: #e05555;
-      --green: #55c55a;
-    }
+/* ── SCREEN 1: LANDING ── */
+#screen-landing{background:var(--bg);overflow-y:auto;}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+/* HERO */
+.hero{position:relative;width:100%;height:75vh;overflow:hidden;background:#1a1008;}
+.hero img{width:100%;height:100%;object-fit:cover;opacity:0.88;display:block;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.72) 100%);}
 
-    header {
-      width: 100%;
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-    header .logo { font-size: 1.4rem; }
-    header h1 { font-size: 1.1rem; font-weight: 600; color: var(--accent2); }
-    header span { font-size: 0.8rem; color: var(--muted); }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--muted);
-      margin-left: auto;
-      transition: background 0.3s;
-    }
-    .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .status-dot.speaking { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 1s infinite; }
+/* Tags on hero, top-left */
+.hero-tags{position:absolute;top:1.5rem;left:1.8rem;display:flex;gap:8px;flex-wrap:wrap;}
+.hero-tag{padding:5px 14px;border-radius:20px;font-size:12px;letter-spacing:0.03em;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.28);color:#fff;}
 
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* Name + rating + address overlay at bottom-left */
+.hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:2rem 1.8rem 1.6rem 1.8rem;}
+.hero-name{font-family:'Playfair Display',serif;font-size:3.8rem;font-weight:400;color:#fff;line-height:1.1;text-shadow:0 2px 16px rgba(0,0,0,0.4);}
+.hero-name em{font-style:italic;color:#f0c050;}
+.hero-meta{display:flex;align-items:center;gap:1.2rem;margin-top:0.6rem;}
+.hero-rating{display:flex;align-items:center;gap:6px;color:#fff;font-size:14px;}
+.hero-rating svg{color:#f0c050;}
+.hero-sep{width:1px;height:14px;background:rgba(255,255,255,0.35);}
+.hero-addr{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,0.85);font-size:13px;}
 
-    .container {
-      width: 100%;
-      max-width: 680px;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      padding: 1rem;
-      gap: 1rem;
-    }
+/* Floating call card overlaid at bottom of hero */
+.call-float{position:absolute;bottom:1.6rem;right:1.8rem;background:#fff;border-radius:16px;padding:1rem 1.2rem;display:flex;align-items:center;gap:1rem;box-shadow:0 8px 32px rgba(0,0,0,0.18);min-width:340px;}
+.sofia-ava{width:46px;height:46px;border-radius:50%;background:var(--goldb);border:1.5px solid #e8d4a0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gold);flex-shrink:0;position:relative;}
+.sofia-dot{position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid #fff;}
+.sofia-info{flex:1;}
+.sofia-name{font-weight:600;font-size:15px;color:var(--text);}
+.sofia-sub{font-size:12px;color:var(--textm);margin-top:1px;}
+.sofia-phone{font-size:12px;color:var(--textm);margin-top:3px;}
+.call-actions{display:flex;flex-direction:column;gap:7px;align-items:stretch;}
+.call-btn-main{padding:0.6rem 1.2rem;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:all 0.2s;}
+.call-btn-main:hover{background:#a03028;}
+.call-btn-main svg{width:15px;height:15px;}
+.change-plans-btn{padding:0.55rem 1rem;background:transparent;border:1.5px solid var(--b2);border-radius:10px;color:var(--textm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;transition:all 0.2s;text-align:center;}
+.change-plans-btn:hover{border-color:var(--gold);color:var(--gold);}
 
-    /* Chat window */
-    #chat {
-      flex: 1;
-      min-height: 300px;
-      max-height: 55vh;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 0.5rem 0;
-    }
+/* Landing body content */
+.landing-body{padding:2.2rem 8rem;display:flex;flex-direction:column;gap:2rem;}
 
-    .bubble {
-      max-width: 82%;
-      padding: 0.65rem 1rem;
-      border-radius: 14px;
-      font-size: 0.92rem;
-      line-height: 1.5;
-      word-wrap: break-word;
-    }
-    .bubble.user {
-      align-self: flex-end;
-      background: var(--user-bubble);
-      border-bottom-right-radius: 4px;
-      color: #d0d0e8;
-    }
-    .bubble.agent {
-      align-self: flex-start;
-      background: var(--agent-bubble);
-      border-bottom-left-radius: 4px;
-      color: #c8e8c8;
-    }
-    .bubble.system {
-      align-self: center;
-      background: transparent;
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-style: italic;
-    }
-    .bubble .label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-bottom: 0.2rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
+.section-label{font-size:11px;letter-spacing:0.09em;text-transform:uppercase;color:var(--texts);margin-bottom:14px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.section-label svg{width:13px;height:13px;color:var(--texts);}
 
-    /* Visualiser */
-    .vis-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 64px;
-      gap: 3px;
-    }
-    .bar {
-      width: 4px;
-      border-radius: 2px;
-      background: var(--accent);
-      transition: height 0.08s ease;
-      min-height: 4px;
-    }
+.hours-row{display:flex;gap:10px;flex-wrap:wrap;}
+.hours-card{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:8px 16px;font-size:13px;}
+.hours-day{color:var(--textm);margin-bottom:2px;font-size:12px;}
+.hours-time{color:var(--text);font-weight:500;}
+.hours-closed{color:var(--texts);font-style:italic;}
 
-    /* Controls */
-    .controls {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
+/* Menu cards — larger images, price on right */
+.menu-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.menu-card{border-radius:14px;overflow:hidden;border:1px solid var(--b1);background:var(--s1);}
+.menu-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--s2);}
+.menu-card-body{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;}
+.menu-card-name{font-size:14px;font-weight:400;color:var(--text);font-family:'Playfair Display',serif;}
+.menu-card-price{font-size:14px;color:var(--gold);font-weight:500;}
 
-    #mic-btn {
-      flex: 1;
-      padding: 0.9rem 1.5rem;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    #mic-btn:hover { background: var(--border); }
-    #mic-btn.listening {
-      background: rgba(200, 151, 58, 0.15);
-      border-color: var(--accent);
-      color: var(--accent2);
-      animation: glow 1.5s infinite;
-    }
-    #mic-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.integrations-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.int-badge{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--s1);border:1px solid var(--b1);border-radius:22px;font-size:12.5px;color:var(--textm);}
+.int-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
 
-    @keyframes glow {
-      0%,100% { box-shadow: 0 0 0 0 rgba(200,151,58,0); }
-      50% { box-shadow: 0 0 0 6px rgba(200,151,58,0.2); }
-    }
+.map-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--b1);height:260px;position:relative;background:var(--s2);}
+.map-wrap iframe{width:100%;height:100%;border:none;display:block;}
+.map-pin-overlay{position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,0.96);border:1px solid var(--b1);border-radius:8px;padding:5px 10px;font-size:11.5px;color:var(--textm);display:flex;align-items:center;gap:5px;}
 
-    #end-btn {
-      padding: 0.9rem 1.2rem;
-      border: none;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      background: rgba(224, 85, 85, 0.15);
-      color: var(--red);
-      border: 1px solid rgba(224,85,85,0.3);
-      transition: all 0.2s;
-    }
-    #end-btn:hover { background: rgba(224,85,85,0.25); }
+.dash-link{text-align:center;font-size:12.5px;color:var(--texts);padding-bottom:0.5rem;}
+.dash-link a{color:var(--gold);cursor:pointer;text-decoration:none;font-weight:500;}
+.dash-link a:hover{text-decoration:underline;}
 
-    /* Interim transcript badge */
-    #interim {
-      font-size: 0.82rem;
-      color: var(--muted);
-      min-height: 1.2em;
-      text-align: center;
-      font-style: italic;
-      padding: 0 0.5rem;
-    }
+/* ── SCREEN 2: RINGING (full-screen dark) ── */
+#screen-calling{
+  position:fixed;inset:0;z-index:500;
+  background:radial-gradient(ellipse at 50% 40%, #2a2010 0%, #0e0c08 100%);
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:1.6rem;
+}
+.ring-avatar-wrap{position:relative;width:130px;height:130px;margin:auto;}
+.ring-avatar{width:130px;height:130px;border-radius:50%;background:var(--goldb);border:2px solid #e8d4a0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:3rem;color:var(--gold);position:relative;z-index:1;}
+.ring1,.ring2,.ring3{position:absolute;border-radius:50%;border:1px solid rgba(160,120,48,0.35);top:50%;left:50%;transform:translate(-50%,-50%);}
+.ring1{width:170px;height:170px;animation:rr 2.4s ease-out infinite;}
+.ring2{width:210px;height:210px;animation:rr 2.4s ease-out infinite 0.5s;}
+.ring3{width:250px;height:250px;animation:rr 2.4s ease-out infinite 1s;}
+@keyframes rr{0%{opacity:0.5;transform:translate(-50%,-50%) scale(0.9)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+.ringing-name{font-family:'Playfair Display',serif;font-size:2rem;color:#f5ead8;text-align:center;}
+.ringing-sub{font-size:14px;color:rgba(245,234,216,0.5);text-align:center;letter-spacing:0.04em;}
+.ringing-status{font-size:14px;color:var(--gold2);letter-spacing:0.06em;text-align:center;}
+.dots span{animation:db 1.4s infinite;display:inline-block;}
+.dots span:nth-child(2){animation-delay:0.2s;}
+.dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes db{0%,80%,100%{opacity:0.2}40%{opacity:1}}
 
-    /* Info panel */
-    .info-toggle {
-      font-size: 0.78rem;
-      color: var(--muted);
-      cursor: pointer;
-      text-align: center;
-      padding: 0.25rem;
-      user-select: none;
-    }
-    .info-toggle:hover { color: var(--accent2); }
-    #info-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem;
-      font-size: 0.82rem;
-      color: var(--muted);
-      display: none;
-      line-height: 1.6;
-    }
-    #info-panel.open { display: block; }
-    #info-panel h3 { color: var(--accent2); margin-bottom: 0.4rem; font-size: 0.85rem; }
+/* ── SCREEN 3: ACTIVE CALL (full-screen dark) ── */
+#screen-active{
+  position:fixed;inset:0;z-index:500;
+  background:#0e0c08;
+  flex-direction:column;
+}
+.active-bar{background:rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.08);padding:1rem 1.4rem;display:flex;align-items:center;gap:12px;}
+.ab-avatar{width:38px;height:38px;border-radius:50%;background:var(--goldb);border:1px solid #e8d4a0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);flex-shrink:0;}
+.ab-name{font-size:14px;font-weight:500;color:#f0ead8;}
+.ab-status{font-size:12px;color:rgba(240,234,216,0.45);}
+.ab-status.live{color:var(--green);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:ldb 1.5s infinite;}
+@keyframes ldb{0%,100%{opacity:1}50%{opacity:0.3}}
+.ab-timer{font-size:13px;color:rgba(240,234,216,0.4);margin-left:auto;font-variant-numeric:tabular-nums;}
+.wv-strip{background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;gap:3px;height:48px;padding:0 1.4rem;}
+.wvb{width:4px;border-radius:2px;background:rgba(255,255,255,0.12);height:6px;transition:height 0.09s ease;}
+.chat-scroll{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:0.8rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;}
+.bbl{display:flex;flex-direction:column;gap:3px;}
+.bbl.user{align-items:flex-end;}
+.bbl.agent{align-items:flex-start;}
+.bbl.sys{align-items:center;}
+.bbl-lbl{font-size:11px;color:rgba(240,234,216,0.3);letter-spacing:0.05em;text-transform:uppercase;}
+.bbl-txt{padding:0.65rem 1rem;border-radius:12px;font-size:14px;line-height:1.6;max-width:86%;}
+.bbl.user .bbl-txt{background:rgba(255,255,255,0.12);color:#f0ead8;border-bottom-right-radius:3px;}
+.bbl.agent .bbl-txt{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e8dcc8;border-bottom-left-radius:3px;}
+.bbl.sys .bbl-txt{background:transparent;border:none;font-size:12px;color:rgba(240,234,216,0.3);font-style:italic;}
+.booking-confirm{margin:0 1.5rem;padding:0.85rem 1.2rem;background:rgba(58,138,64,0.15);border:1px solid rgba(58,138,64,0.35);border-radius:12px;font-size:13.5px;display:none;}
+.booking-confirm.show{display:block;}
+.bc-title{font-size:12px;color:#6dbb72;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.bc-row{display:flex;gap:10px;margin-bottom:3px;}
+.bc-k{color:rgba(240,234,216,0.5);min-width:72px;}
+.bc-v{color:#f0ead8;font-weight:500;}
+.transfer-notice{margin:0 1.5rem;padding:0.75rem 1.2rem;background:rgba(160,120,48,0.12);border:1px solid rgba(160,120,48,0.3);border-radius:12px;font-size:13px;color:#c49a48;display:none;align-items:center;gap:8px;}
+.transfer-notice.show{display:flex;}
+.interim-row{padding:0.45rem 1.5rem;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.07);font-size:12px;color:var(--gold2);font-style:italic;min-height:36px;}
+.ctrl-bar{background:rgba(255,255,255,0.04);border-top:1px solid rgba(255,255,255,0.08);padding:1rem 1.4rem;display:flex;gap:1rem;}
+.mBtn{flex:1;padding:0.9rem;border-radius:28px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(240,234,216,0.7);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;}
+.mBtn:hover{background:rgba(255,255,255,0.12);color:#f0ead8;}
+.mBtn.on{background:rgba(160,120,48,0.2);border-color:rgba(160,120,48,0.4);color:var(--gold2);}
+.eBtn{padding:0.9rem 1.4rem;border-radius:28px;background:rgba(192,72,56,0.2);border:1px solid rgba(192,72,56,0.4);color:#e87060;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.eBtn:hover{background:rgba(192,72,56,0.35);}
 
-    /* Bookings panel */
-    #bookings-section {
-      margin-top: 0.5rem;
-    }
-    #bookings-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-    #bookings-table th {
-      color: var(--muted);
-      text-align: left;
-      padding: 0.3rem 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    #bookings-table td {
-      padding: 0.35rem 0.5rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-    }
+/* ── SCREEN 4: DASHBOARD ── */
+#screen-dashboard{background:var(--bg);min-height:600px;}
+.dash-top{background:var(--s1);border-bottom:1px solid var(--b1);padding:1rem 1.2rem;display:flex;align-items:center;gap:10px;}
+.dash-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--text);flex:1;}
+.back-btn{font-size:12px;color:var(--textm);cursor:pointer;padding:6px 12px;border:1px solid var(--b1);border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.back-btn:hover{border-color:var(--b2);color:var(--text);}
+.dash-scroll{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:1rem;text-align:center;}
+.stat-n{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);}
+.stat-l{font-size:11px;color:var(--texts);letter-spacing:0.05em;text-transform:uppercase;margin-top:3px;}
+.sec-hd{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--texts);margin-bottom:10px;font-weight:600;}
+.bk-row{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--b1);border-radius:11px;padding:10px 14px;margin-bottom:8px;font-size:13px;}
+.bk-name{flex:1;color:var(--text);}
+.bk-time{color:var(--textm);font-size:12px;}
+.bk-badge{padding:3px 11px;border-radius:20px;font-size:11px;background:var(--goldb);border:1px solid #e8d4a0;color:var(--gold);}
+.bk-note{font-size:11px;color:var(--texts);font-style:italic;}
+.bk-row.new-bk{background:var(--greenb);border-color:#b8debb;}
+.bk-row.new-bk .bk-badge{background:var(--greenb);border-color:#b8debb;color:var(--green);}
+.log-card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;}
+.log-row{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--b1);font-size:13px;}
+.log-row:last-child{border:none;}
+.log-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.log-icon.ok{background:var(--greenb);border:1px solid #b8debb;}
+.log-icon.faq{background:var(--goldb);border:1px solid #e8d4a0;}
+.log-icon.mod{background:#eef4fe;border:1px solid #b8d0f8;}
+.log-icon.cancel{background:#fdf0ee;border:1px solid #f0c0b8;}
+.log-icon.escalated{background:#fff8ed;border:1px solid #f0d890;}
+.log-body{flex:1;}
+.log-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.log-who{font-weight:500;color:var(--text);}
+.log-tag{font-size:11px;padding:2px 8px;border-radius:12px;}
+.log-tag.ok{background:var(--greenb);color:var(--green);border:1px solid #b8debb;}
+.log-tag.faq{background:var(--goldb);color:var(--gold);border:1px solid #e8d4a0;}
+.log-tag.mod{background:#eef4fe;color:#2a5ab8;border:1px solid #b8d0f8;}
+.log-tag.cancel{background:#fdf0ee;color:var(--red);border:1px solid #f0c0b8;}
+.log-tag.escalated{background:#fff8ed;color:#7a5a10;border:1px solid #f0d890;}
+.log-txt{color:var(--textm);line-height:1.5;}
+.log-time{font-size:10px;color:var(--texts);margin-top:2px;}
 
-    footer {
-      padding: 0.75rem;
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-align: center;
-    }
-  </style>
+/* Modal */
+.plans-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(2px);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
+.plans-modal.show{display:flex;}
+.plans-modal-card{background:var(--s1);border-radius:16px;padding:2rem;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative;}
+.plans-modal-title{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--text);margin-bottom:0.5rem;text-align:center;}
+.plans-modal-sub{font-size:13px;color:var(--textm);text-align:center;margin-bottom:1.5rem;}
+.plans-modal-btns{display:flex;flex-direction:column;gap:10px;}
+.plans-modal-btn{padding:1rem;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.plans-modal-btn.cancel-btn{background:#fdf0ee;border:1.5px solid #f0c0b8;color:var(--red);}
+.plans-modal-btn.cancel-btn:hover{background:#fae0db;}
+.plans-modal-btn.modify-btn{background:var(--goldb);border:1.5px solid #e8d4a0;color:var(--gold);}
+.plans-modal-btn.modify-btn:hover{background:#f5efd8;}
+.plans-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:20px;color:var(--textm);cursor:pointer;}
+</style>
 </head>
 <body>
+<div class="phone-shell">
 
-<header>
-  <span class="logo">🍝</span>
-  <div>
-    <h1>VoiceDesk</h1>
-    <span>La Bella Ristorante &mdash; Sofia</span>
+<!-- SCREEN 1: LANDING -->
+<div class="screen active" id="screen-landing">
+
+  <!-- HERO with overlaid elements -->
+  <div class="hero">
+    <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=85&auto=format&fit=crop" alt="La Bella Ristorante" onerror="this.style.display='none'"/>
+    <div class="hero-overlay"></div>
+
+    <!-- Tags top-left -->
+    <div class="hero-tags">
+      <span class="hero-tag">Italian</span>
+      <span class="hero-tag">Vegetarian options</span>
+      <span class="hero-tag">Gluten-free</span>
+      <span class="hero-tag">Parking on Via Roma</span>
+    </div>
+
+    <!-- Name + meta bottom-left -->
+    <div class="hero-bottom">
+      <div class="hero-name">La <em>Bella</em><br>Ristorante</div>
+      <div class="hero-meta">
+        <div class="hero-rating">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f0c050"><path d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625.59-3.44L2 4.635l3.455-.505z"/></svg>
+          4.8 · 312 reviews
+        </div>
+        <div class="hero-sep"></div>
+        <div class="hero-addr">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1a3.5 3.5 0 0 1 3.5 3.5C9.5 7.5 6 11 6 11S2.5 7.5 2.5 4.5A3.5 3.5 0 0 1 6 1z" stroke="rgba(255,255,255,0.8)" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1" fill="rgba(255,255,255,0.8)"/></svg>
+          Via Roma, Rennes
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating call card bottom-right -->
+    <div class="call-float">
+      <div class="sofia-ava">S<div class="sofia-dot"></div></div>
+      <div class="sofia-info">
+        <div class="sofia-name">Sofia</div>
+        <div class="sofia-sub">AI Voice Host · Books, modifies, answers — 24/7</div>
+        <div class="sofia-phone">+33758780825</div>
+      </div>
+      <div class="call-actions">
+        <button class="call-btn-main" onclick="startCall()">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="white"><path d="M13.5 10.5l-2-.5c-.3-.1-.6 0-.8.2l-.9.9c-1.6-.8-2.8-2.1-3.6-3.6l.9-.9c.2-.2.3-.5.2-.8l-.5-2c-.1-.4-.5-.7-.9-.8H4c-.5 0-.9.4-.9.9 0 7 5.7 12.7 12.7 12.7.5 0 .9-.4.9-.9v-1.8c0-.4-.3-.8-.7-.9z"/></svg>
+          Call Sofia
+        </button>
+        <button class="change-plans-btn" onclick="showChangePlansModal()">Change in plans?</button>
+      </div>
+    </div>
   </div>
-  <div class="status-dot" id="status-dot" title="Disconnected"></div>
-</header>
 
-<div class="container">
+  <!-- Body content -->
+  <div class="landing-body">
 
-  <!-- Chat transcript -->
-  <div id="chat">
-    <div class="bubble system">Click "Start Call" to connect to Sofia, your voice assistant.</div>
+    <!-- Opening hours -->
+    <div>
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5" stroke-linecap="round"/></svg>
+        Opening hours
+      </div>
+      <div class="hours-row">
+        <div class="hours-card"><div class="hours-day">Tue – Sun</div><div class="hours-time">12:00 – 15:00</div></div>
+        <div class="hours-card"><div class="hours-day">Tue – Sun</div><div class="hours-time">18:00 – 23:00</div></div>
+        <div class="hours-card"><div class="hours-day">Monday</div><div class="hours-closed">Closed</div></div>
+      </div>
+    </div>
+
+    <!-- Menu -->
+    <div>
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 2v5c0 1.657 1.343 3 3 3s3-1.343 3-3V2" stroke-linecap="round"/><path d="M8 10v4" stroke-linecap="round"/><path d="M5 14h6" stroke-linecap="round"/></svg>
+        From our menu
+      </div>
+      <div class="menu-row">
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=400&h=300&q=80&auto=format&fit=crop" alt="Margherita" onerror="this.style.background='var(--s3)'"/>
+          <div class="menu-card-body"><div class="menu-card-name">Margherita</div><div class="menu-card-price">€12</div></div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1612874742237-6526221588e3?w=400&h=300&q=80&auto=format&fit=crop" alt="Carbonara" onerror="this.style.background='var(--s3)'"/>
+          <div class="menu-card-body"><div class="menu-card-name">Carbonara</div><div class="menu-card-price">€14</div></div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&q=80&auto=format&fit=crop" alt="Tiramisù" onerror="this.style.background='var(--s3)'"/>
+          <div class="menu-card-body"><div class="menu-card-name">Tiramisù</div><div class="menu-card-price">€6</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking system -->
+    <div>
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5.5 8l1.8 1.8 3.2-3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Booking system
+      </div>
+      <div class="integrations-row">
+        <div class="int-badge"><div class="int-dot"></div>ReserveSync integrated</div>
+        <div class="int-badge"><div class="int-dot"></div>Real-time availability</div>
+        <div class="int-badge"><div class="int-dot"></div>Auto-confirmation</div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div>
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5a4.5 4.5 0 0 1 4.5 4.5C12.5 9.5 8 14.5 8 14.5S3.5 9.5 3.5 6A4.5 4.5 0 0 1 8 1.5z"/><circle cx="8" cy="6" r="1.5"/></svg>
+        Find us
+      </div>
+      <div class="map-wrap">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2664.5!2d-1.6778!3d48.1173!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x480ede2291000001%3A0x1!2sRennes%2C+France!5e0!3m2!1sen!2sfr!4v1700000000" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map-pin-overlay">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1a3.5 3.5 0 0 1 3.5 3.5C9.5 7.5 6 11 6 11S2.5 7.5 2.5 4.5A3.5 3.5 0 0 1 6 1z" stroke="#a07830" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1" fill="#a07830"/></svg>
+          Via Roma, Rennes
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-link">Restaurant owner? <a onclick="goTo('screen-dashboard')">View your dashboard →</a></div>
+
   </div>
-
-  <!-- Waveform visualiser -->
-  <div class="vis-wrap" id="visualiser"></div>
-
-  <!-- Interim transcript -->
-  <div id="interim"></div>
-
-  <!-- Controls -->
-  <div class="controls">
-    <button id="mic-btn" onclick="toggleCall()">
-      <span id="btn-icon">📞</span>
-      <span id="btn-label">Start Call</span>
-    </button>
-    <button id="end-btn" onclick="endCall()" style="display:none">End Call</button>
-  </div>
-
-  <!-- Info toggle -->
-  <div class="info-toggle" onclick="toggleInfo()">▼ Restaurant info &amp; bookings</div>
-  <div id="info-panel">
-    <h3>La Bella Ristorante</h3>
-    <div id="restaurant-info">Loading…</div>
-    <br>
-    <h3>Bookings today</h3>
-    <table id="bookings-table">
-      <thead><tr><th>Name</th><th>Party</th><th>Date</th><th>Time</th></tr></thead>
-      <tbody id="bookings-body"><tr><td colspan="4" style="color:var(--muted)">No bookings yet.</td></tr></tbody>
-    </table>
-  </div>
-
 </div>
 
-<footer>VoiceDesk &mdash; Powered by Groq + ElevenLabs + Web Speech API</footer>
+<!-- SCREEN 2: RINGING (full-screen) -->
+<div class="screen" id="screen-calling" style="position:fixed;inset:0;z-index:500;background:radial-gradient(ellipse at 50% 38%, #2c2214 0%, #0e0c08 100%);align-items:center;justify-content:center;flex-direction:column;gap:1.8rem;">
+  <div class="ring-avatar-wrap">
+    <div class="ring1"></div><div class="ring2"></div><div class="ring3"></div>
+    <div class="ring-avatar">S</div>
+  </div>
+  <div style="text-align:center;display:flex;flex-direction:column;gap:0.5rem;">
+    <div class="ringing-name">Sofia</div>
+    <div class="ringing-sub">La Bella Ristorante · AI Host</div>
+  </div>
+  <div class="ringing-status">Calling<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+</div>
 
-<audio id="audio-player" style="display:none"></audio>
+<!-- SCREEN 3: ACTIVE CALL (full-screen) -->
+<div class="screen" id="screen-active" style="position:fixed;inset:0;z-index:500;background:#0e0c08;">
+  <div class="active-bar">
+    <div class="ab-avatar">S</div>
+    <div style="flex:1">
+      <div class="ab-name">Sofia · La Bella Ristorante</div>
+      <div class="ab-status live" id="ab-status"><span class="live-dot"></span>Connected</div>
+    </div>
+    <div class="ab-timer" id="ab-timer">0:00</div>
+  </div>
+  <div class="wv-strip" id="wv-strip"></div>
+  <div class="chat-scroll" id="chat-scroll"></div>
+  <div class="booking-confirm" id="bk-confirm">
+    <div class="bc-title">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#3a8a40" stroke-width="1.2"/><path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#3a8a40" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Reservation confirmed
+    </div>
+    <div class="bc-row"><span class="bc-k">Name</span><span class="bc-v" id="bc-name">—</span></div>
+    <div class="bc-row"><span class="bc-k">Date</span><span class="bc-v" id="bc-date">—</span></div>
+    <div class="bc-row"><span class="bc-k">Time</span><span class="bc-v" id="bc-time">—</span></div>
+    <div class="bc-row"><span class="bc-k">Guests</span><span class="bc-v" id="bc-guests">—</span></div>
+    <div class="bc-row" id="bc-note-row" style="display:none"><span class="bc-k">Note</span><span class="bc-v" id="bc-note">—</span></div>
+  </div>
+  <div class="transfer-notice" id="transfer-notice">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#7a5a10" stroke-width="1.5"><path d="M8 2v6l3 3"/><circle cx="8" cy="8" r="6"/></svg>
+    Transferring to a team member — please hold
+  </div>
+  <div class="interim-row" id="interim-row"></div>
+  <div class="ctrl-bar">
+    <button class="mBtn" id="mic-btn" onclick="toggleMic()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="1" width="6" height="9" rx="3"/><path d="M2 7c0 3.314 2.686 6 6 6s6-2.686 6-6"/><line x1="8" y1="13" x2="8" y2="15"/></svg>
+      <span id="mic-lbl">Tap to speak</span>
+    </button>
+    <button class="mBtn" id="manager-btn" onclick="requestManager()" style="display:none;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v6m0 4v2M3 8c0-2.76 2.24-5 5-5s5 2.24 5 5-2.24 5-5 5-5-2.24-5-5z" stroke-linecap="round"/></svg>
+      <span>Get Manager</span>
+    </button>
+    <button class="eBtn" onclick="endCall()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 10.5l-2-.5c-.3-.1-.6 0-.8.2l-.9.9c-1.6-.8-2.8-2.1-3.6-3.6l.9-.9c.2-.2.3-.5.2-.8l-.5-2c-.1-.4-.5-.7-.9-.8H4c-.5 0-.9.4-.9.9 0 7 5.7 12.7 12.7 12.7.5 0 .9-.4.9-.9v-1.8c0-.4-.3-.8-.7-.9z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN 4: DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-top">
+    <div>
+      <div class="dash-title">La <em style="font-style:italic;color:var(--gold)">Bella</em> — Owner Dashboard</div>
+      <div style="font-size:11px;color:var(--texts);">Sofia · AI Host · Active now · ReserveSync connected</div>
+    </div>
+    <button class="back-btn" onclick="goTo('screen-landing')">← Back</button>
+  </div>
+  <div class="dash-scroll">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-n">47</div><div class="stat-l">Calls today</div></div>
+      <div class="stat"><div class="stat-n">12</div><div class="stat-l">Bookings</div></div>
+      <div class="stat"><div class="stat-n">94%</div><div class="stat-l">Resolved</div></div>
+      <div class="stat"><div class="stat-n">2</div><div class="stat-l">Escalated</div></div>
+    </div>
+    <div>
+      <div class="sec-hd">Today's reservations</div>
+      <div class="bk-row"><span class="bk-name">Marco Rossi</span><span class="bk-note">Gluten-free ×1</span><span class="bk-time">19:30</span><span class="bk-badge">4 guests</span></div>
+      <div class="bk-row"><span class="bk-name">Amina Benali</span><span class="bk-note"></span><span class="bk-time">20:00</span><span class="bk-badge">2 guests</span></div>
+      <div class="bk-row"><span class="bk-name">Thomas Leroy</span><span class="bk-note">Birthday dinner</span><span class="bk-time">21:15</span><span class="bk-badge">6 guests</span></div>
+      <div id="new-bk-row" style="display:none">
+        <div class="bk-row new-bk">
+          <span class="bk-name" id="dash-n">—</span>
+          <span class="bk-note" id="dash-note"></span>
+          <span class="bk-time" id="dash-t">—</span>
+          <span class="bk-badge" style="background:var(--greenb);border-color:#b8debb;color:var(--green);" id="dash-g">—</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-hd">Recent calls</div>
+      <div class="log-card">
+        <div class="log-row">
+          <div class="log-icon ok"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#3a8a40" stroke-width="1.2"/><path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#3a8a40" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="log-body">
+            <div class="log-top"><span class="log-who">+33 6 12 34 56 78</span><span class="log-tag ok">Booking</span></div>
+            <div class="log-txt">"Table for 4 Saturday, gluten-free for one" — confirmed 19:30</div>
+            <div class="log-time">Today · 2 min ago · 1m 44s</div>
+          </div>
+        </div>
+        <div class="log-row">
+          <div class="log-icon mod"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#2a5ab8" stroke-width="1.2"/><path d="M4 6h4M6 4l2 2-2 2" stroke="#2a5ab8" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="log-body">
+            <div class="log-top"><span class="log-who">+33 6 55 44 33 22</span><span class="log-tag mod">Modification</span></div>
+            <div class="log-txt">"Move my reservation from 19:00 to 20:30" — updated</div>
+            <div class="log-time">Today · 18 min ago · 1m 02s</div>
+          </div>
+        </div>
+        <div class="log-row">
+          <div class="log-icon faq"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#a07830" stroke-width="1.2"/><path d="M6 3.5v2.5" stroke="#a07830" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="7.5" r="0.5" fill="#a07830"/></svg></div>
+          <div class="log-body">
+            <div class="log-top"><span class="log-who">+33 6 98 76 54 32</span><span class="log-tag faq">FAQ</span></div>
+            <div class="log-txt">"Do you have vegetarian options?" — answered</div>
+            <div class="log-time">Today · 31 min ago · 0m 38s</div>
+          </div>
+        </div>
+        <div class="log-row">
+          <div class="log-icon escalated"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#7a5a10" stroke-width="1.2"/><path d="M6 3v3.5" stroke="#7a5a10" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="8.2" r="0.5" fill="#7a5a10"/></svg></div>
+          <div class="log-body">
+            <div class="log-top"><span class="log-who">+33 7 11 22 33 44</span><span class="log-tag escalated">Escalated</span></div>
+            <div class="log-txt">"I need to speak to the manager about my last visit" — transferred to staff</div>
+            <div class="log-time">Today · 52 min ago · 0m 55s</div>
+          </div>
+        </div>
+        <div id="new-log-row" style="display:none">
+          <div class="log-row" style="background:#f8fdf8;">
+            <div class="log-icon ok"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#3a8a40" stroke-width="1.2"/><path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#3a8a40" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <div class="log-body">
+              <div class="log-top"><span class="log-who">Demo call</span><span class="log-tag ok" id="new-log-tag">Booking</span></div>
+              <div class="log-txt" id="new-log-txt">—</div>
+              <div class="log-time">Just now</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Change in Plans Modal -->
+<div class="plans-modal" id="plans-modal">
+  <div class="plans-modal-card">
+    <button class="plans-modal-close" onclick="hidePlansModal()">×</button>
+    <div class="plans-modal-title">Change in plans?</div>
+    <div class="plans-modal-sub">What would you like to do with your reservation?</div>
+    <div class="plans-modal-btns">
+      <button class="plans-modal-btn cancel-btn" onclick="startCallWithContext('cancel')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1c3.866 0 7 3.134 7 7s-3.134 7-7 7-7-3.134-7-7 3.134-7 7-7zm3.364 4.636l-.707.707-2.657 2.657-2.657-2.657-.707-.707-1.414 1.414.707.707 2.657 2.657-2.657 2.657-.707.707 1.414 1.414.707-.707 2.657-2.657 2.657 2.657.707.707 1.414-1.414-.707-.707-2.657-2.657 2.657-2.657.707-.707-1.414-1.414z"/></svg>
+        Cancel reservation
+      </button>
+      <button class="plans-modal-btn modify-btn" onclick="startCallWithContext('modify')">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 14.5h11V13h-11v1.5zM11.88 2.88L13.3 1.47c.39-.39 1.02-.39 1.41 0l.62.62c.39.39.39 1.02 0 1.41L14.12 5.22 11.63 8.05 9.29 5.7l2.59-2.82zM2 13l7.29-7.29L11.63 8.05 4.34 15.34H2v-2.34z"/></svg>
+        Modify reservation
+      </button>
+    </div>
+  </div>
+</div>
+
+<audio id="ap" style="display:none"></audio>
 
 <script>
-// ── Config ────────────────────────────────────────────────────────────────
-const WS_URL = `ws://${location.host}/ws/voice`;
+const $=id=>document.getElementById(id);
 
-// ── State ─────────────────────────────────────────────────────────────────
-let ws = null;
-let recognition = null;
-let isListening = false;
-let agentSpeaking = false;
-let sessionActive = false;
-let audioQueue = [];
-let playingAudio = false;
-
-// ── DOM refs ──────────────────────────────────────────────────────────────
-const chat = document.getElementById('chat');
-const interim = document.getElementById('interim');
-const micBtn = document.getElementById('mic-btn');
-const endBtn = document.getElementById('end-btn');
-const btnIcon = document.getElementById('btn-icon');
-const btnLabel = document.getElementById('btn-label');
-const statusDot = document.getElementById('status-dot');
-const audioPlayer = document.getElementById('audio-player');
-
-// ── Waveform bars ─────────────────────────────────────────────────────────
-const NUM_BARS = 24;
-const vis = document.getElementById('visualiser');
-const bars = [];
-for (let i = 0; i < NUM_BARS; i++) {
-  const b = document.createElement('div');
-  b.className = 'bar';
-  b.style.height = '4px';
-  vis.appendChild(b);
-  bars.push(b);
-}
-
-let visInterval = null;
-function startVis(type) {
-  stopVis();
-  visInterval = setInterval(() => {
-    bars.forEach((b, i) => {
-      const base = type === 'listening' ? 24 : 10;
-      const amp = type === 'listening' ? 32 : 48;
-      const phase = (Date.now() / 120 + i * 0.8) % (Math.PI * 2);
-      const h = base + Math.abs(Math.sin(phase) * amp * (0.5 + 0.5 * Math.random()));
-      b.style.height = `${Math.min(h, 60)}px`;
-      b.style.background = type === 'listening' ? 'var(--accent)' : 'var(--green)';
-    });
-  }, 80);
-}
-function stopVis() {
-  clearInterval(visInterval);
-  bars.forEach(b => { b.style.height = '4px'; b.style.background = 'var(--accent)'; });
-}
-
-// ── Chat helpers ──────────────────────────────────────────────────────────
-function addBubble(role, text) {
-  const wrap = document.createElement('div');
-  wrap.className = `bubble ${role}`;
-  if (role !== 'system') {
-    const lbl = document.createElement('div');
-    lbl.className = 'label';
-    lbl.textContent = role === 'user' ? 'You' : 'Sofia';
-    wrap.appendChild(lbl);
-  }
-  const msg = document.createElement('div');
-  msg.textContent = text;
-  wrap.appendChild(msg);
-  chat.appendChild(wrap);
-  chat.scrollTop = chat.scrollHeight;
-  return wrap;
-}
-
-// ── Audio queue ───────────────────────────────────────────────────────────
-async function enqueueAudio(b64) {
-  audioQueue.push(b64);
-  if (!playingAudio) playNext();
-}
-
-async function playNext() {
-  if (audioQueue.length === 0) {
-    playingAudio = false;
-    agentSpeaking = false;
-    statusDot.className = 'status-dot connected';
-    if (sessionActive && !isListening) startRecognition();
-    return;
-  }
-  playingAudio = true;
-  agentSpeaking = true;
-  stopRecognition();
-  startVis('speaking');
-  statusDot.className = 'status-dot speaking';
-
-  const b64 = audioQueue.shift();
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const blob = new Blob([bytes], { type: 'audio/mpeg' });
-  const url = URL.createObjectURL(blob);
-
-  audioPlayer.src = url;
-  audioPlayer.onended = () => {
-    URL.revokeObjectURL(url);
-    stopVis();
-    playNext();
-  };
-  audioPlayer.onerror = () => { stopVis(); playNext(); };
-  try { await audioPlayer.play(); } catch(e) { stopVis(); playNext(); }
-}
-
-// ── Speech recognition ────────────────────────────────────────────────────
-function initRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    addBubble('system', 'Web Speech API not supported in this browser. Try Chrome or Edge.');
-    return null;
-  }
-  const r = new SpeechRecognition();
-  r.lang = 'en-US';
-  r.interimResults = true;
-  r.continuous = false; // restart manually for reliability
-
-  r.onstart = () => {
-    isListening = true;
-    micBtn.classList.add('listening');
-    btnIcon.textContent = '🎙️';
-    btnLabel.textContent = 'Listening…';
-    startVis('listening');
-  };
-
-  r.onend = () => {
-    isListening = false;
-    stopVis();
-    micBtn.classList.remove('listening');
-    btnIcon.textContent = '📞';
-    btnLabel.textContent = 'Tap to speak';
-    interim.textContent = '';
-    // Auto-restart if session is active and agent is not speaking
-    if (sessionActive && !agentSpeaking) {
-      setTimeout(() => { if (sessionActive && !agentSpeaking) startRecognition(); }, 300);
-    }
-  };
-
-  r.onerror = (e) => {
-    if (e.error === 'no-speech' || e.error === 'aborted') return;
-    console.warn('Speech error:', e.error);
-  };
-
-  r.onresult = (e) => {
-    let finalText = '';
-    let interimText = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalText += t;
-      else interimText += t;
-    }
-    interim.textContent = interimText || finalText;
-    if (finalText.trim()) {
-      interim.textContent = '';
-      sendTranscript(finalText.trim());
-    }
-  };
-
-  return r;
-}
-
-function startRecognition() {
-  if (!recognition) recognition = initRecognition();
-  if (!recognition || isListening || agentSpeaking) return;
-  try { recognition.start(); } catch(e) { /* already started */ }
-}
-
-function stopRecognition() {
-  if (recognition && isListening) {
-    try { recognition.stop(); } catch(e) {}
-  }
-  isListening = false;
-}
-
-// ── WebSocket ─────────────────────────────────────────────────────────────
-function connectWS() {
-  ws = new WebSocket(WS_URL);
-  ws.binaryType = 'arraybuffer';
-
-  ws.onopen = () => {
-    statusDot.className = 'status-dot connected';
-    addBubble('system', 'Connected. Waiting for Sofia…');
-    sessionActive = true;
-  };
-
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-
-    if (msg.type === 'greeting' || msg.type === 'reply') {
-      addBubble('agent', msg.text);
-      if (msg.audio_b64) enqueueAudio(msg.audio_b64);
-    } else if (msg.type === 'thinking') {
-      addBubble('system', 'Sofia is thinking…');
-    } else if (msg.type === 'error') {
-      addBubble('system', `❌ ${msg.text}`);
-      endCall();
-    }
-  };
-
-  ws.onerror = () => {
-    addBubble('system', 'Connection error. Please refresh.');
-    cleanup();
-  };
-
-  ws.onclose = () => {
-    if (sessionActive) {
-      addBubble('system', 'Call ended.');
-      cleanup();
-    }
-  };
-}
-
-function sendTranscript(text) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  addBubble('user', text);
-  ws.send(JSON.stringify({ type: 'transcript', text }));
-}
-
-// ── Call control ──────────────────────────────────────────────────────────
-function toggleCall() {
-  if (!sessionActive) {
-    startCall();
-  } else {
-    // Push-to-talk style: tap to re-trigger mic manually
-    if (!isListening && !agentSpeaking) startRecognition();
+function showChangePlansModal(){$('plans-modal').classList.add('show');}
+function hidePlansModal(){$('plans-modal').classList.remove('show');}
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=$(id);
+  el.classList.add('active');
+  // Full-screen screens need flex display explicitly
+  if(id==='screen-calling'||id==='screen-active'){
+    el.style.display='flex';
   }
 }
 
-function startCall() {
-  sessionActive = false; // will be set true on ws open
-  connectWS();
-  endBtn.style.display = 'block';
-  micBtn.classList.add('disabled');
-  btnLabel.textContent = 'Connecting…';
+let timerInt=null,timerSec=0;
+function startTimer(){timerSec=0;clearInterval(timerInt);timerInt=setInterval(()=>{timerSec++;const m=Math.floor(timerSec/60),s=timerSec%60;$('ab-timer').textContent=m+':'+(s<10?'0':'')+s;},1000);}
+function stopTimer(){clearInterval(timerInt);}
 
-  // Enable mic button once WS is open (handled in ws.onopen via sessionActive flag)
-  const poll = setInterval(() => {
-    if (sessionActive) {
-      micBtn.classList.remove('disabled');
-      btnLabel.textContent = 'Tap to speak';
-      btnIcon.textContent = '🎙️';
-      clearInterval(poll);
-    }
-  }, 200);
+const wvStrip=$('wv-strip');const bEls=[];
+for(let i=0;i<22;i++){const b=document.createElement('div');b.className='wvb';wvStrip.appendChild(b);bEls.push(b);}
+let visInt=null;
+function startVis(t){clearInterval(visInt);visInt=setInterval(()=>{bEls.forEach((b,i)=>{const x=Date.now()/130+i*0.75;const h=t==='u'?5+Math.abs(Math.sin(x)*18*(0.5+0.5*Math.random())):t==='a'?5+Math.abs(Math.sin(x)*26*(0.4+0.6*Math.random())):4;b.style.height=Math.min(h,34)+'px';b.style.background=t==='u'?'#1a1610':t==='a'?'#3a8a40':'var(--b1)';});},80);}
+function stopVis(){clearInterval(visInt);bEls.forEach(b=>{b.style.height='4px';b.style.background='var(--b1)';});}
+
+function addMsg(role,text){const w=document.createElement('div');w.className='bbl '+role;if(role!=='sys'){const l=document.createElement('div');l.className='bbl-lbl';l.textContent=role==='user'?'You':'Sofia';w.appendChild(l);}const b=document.createElement('div');b.className='bbl-txt';b.textContent=text;w.appendChild(b);const c=$('chat-scroll');c.appendChild(w);c.scrollTop=c.scrollHeight;}
+function setStatus(t,live){const el=$('ab-status');el.className='ab-status'+(live?' live':'');el.innerHTML=live?'<span class="live-dot"></span>'+t:t;}
+
+let currentSim='booking',callContext=null;
+function startCall(){hidePlansModal();callContext='new';_initCall();}
+function startCallWithContext(context){hidePlansModal();callContext=context;_initCall();}
+function requestManager(){callContext='manager';sessionActive=false;ws.send(JSON.stringify({type:'end_session'}));ws.close();addMsg('sys','Connecting to manager...');showManagerButton();$('manager-btn').style.display='none';}
+function showManagerButton(){const c=$('chat-scroll');const w=document.createElement('div');w.className='bbl sys';w.style.alignItems='center';w.style.gap='1rem';const txt=document.createElement('div');txt.textContent='Manager: +33 7 58 08 78 25';txt.style.fontSize='14px';txt.style.color='var(--gold2)';txt.style.fontWeight='500';const btn=document.createElement('a');btn.href='tel:+33758078825';btn.textContent='📞 Tap to call';btn.style.padding='0.65rem 1.2rem';btn.style.backgroundColor='rgba(160,120,48,0.3)';btn.style.borderRadius='12px';btn.style.color='var(--gold2)';btn.style.textDecoration='none';btn.style.cursor='pointer';btn.style.fontWeight='500';btn.style.display='inline-block';btn.style.border='1px solid rgba(160,120,48,0.5)';btn.onmouseover=()=>{btn.style.backgroundColor='rgba(160,120,48,0.5)';};btn.onmouseout=()=>{btn.style.backgroundColor='rgba(160,120,48,0.3)';};w.appendChild(txt);w.appendChild(btn);c.appendChild(w);c.scrollTop=c.scrollHeight;}
+function _initCall(){
+  $('bk-confirm').classList.remove('show');
+  $('transfer-notice').classList.remove('show');
+  $('manager-btn').style.display='none';
+  $('chat-scroll').innerHTML='';
+  if(ws&&ws.readyState===WebSocket.OPEN){ws.close();}
+  goTo('screen-calling');
+  setTimeout(()=>{
+    goTo('screen-active');
+    startTimer();
+    addMsg('sys','Call connected to Sofia');
+    $('manager-btn').style.display='flex';
+    tryWS();
+  },2000);
 }
 
-function endCall() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'end_session' }));
-    ws.close();
-  }
-  cleanup();
-  addBubble('system', 'Call ended. Refresh to start a new call.');
-  loadBookings(); // refresh booking table after call
+function showBooking(b){$('bc-name').textContent=b.name;$('bc-date').textContent=b.date;$('bc-time').textContent=b.time;$('bc-guests').textContent=b.guests;if(b.note){$('bc-note').textContent=b.note;$('bc-note-row').style.display='flex';}else{$('bc-note-row').style.display='none';}$('bk-confirm').classList.add('show');}
+function updateDash(b,type){$('dash-n').textContent=b.name;$('dash-t').textContent=b.time;$('dash-g').textContent=b.guests;$('dash-note').textContent=b.note||'';$('new-bk-row').style.display='block';const tag=type==='modify'?'Modification':'Booking';$('new-log-tag').textContent=tag;$('new-log-tag').className='log-tag '+(type==='modify'?'mod':'ok');$('new-log-txt').textContent='"'+b.guests+' — '+b.date+' '+b.time+(b.note?' · '+b.note:'')+'" — confirmed';$('new-log-row').style.display='block';}
+
+let ws=null,rec=null,isListening=false,sessionActive=false;
+let aq=[],playingA=false,greetingReceived=false;
+const ap=$('ap');
+
+function tryWS(){
+  try{
+    ws=new WebSocket(`ws://${location.host}/ws/voice`);
+    greetingReceived=false;
+    ws.onopen=()=>{
+      sessionActive=true;
+      if(callContext==='cancel'){ws.send(JSON.stringify({type:'context',action:'cancel_reservation'}));}
+      else if(callContext==='modify'){ws.send(JSON.stringify({type:'context',action:'modify_reservation'}));}
+      else{ws.send(JSON.stringify({type:'context',action:'new_reservation'}));}
+      setTimeout(()=>{ws.send(JSON.stringify({type:'greeting_request'}));},100);
+    };
+    ws.onmessage=(e)=>{
+      const m=JSON.parse(e.data);
+      if(m.type==='greeting'){if(greetingReceived)return;greetingReceived=true;addMsg('agent',m.text);setStatus('Sofia is speaking…',false);startVis('a');if(m.audio_b64)queueAudio(m.audio_b64);}
+      else if(m.type==='reply'){addMsg('agent',m.text);setStatus('Sofia is speaking…',false);startVis('a');if(m.booking_confirmed){const b=m.booking_confirmed;showBooking({name:b.name,date:b.date,time:b.time,guests:b.guests+' guests',note:''});}if(m.audio_b64)queueAudio(m.audio_b64);}
+      else if(m.type==='booking_confirmed'){const b={name:m.booking?.name||'Guest',date:m.booking?.date||'—',time:m.booking?.time||'—',guests:m.booking?.guests||'—',note:m.booking?.special_requests||''};showBooking(b);addMsg('sys','✓ Booking confirmed and saved');}
+      else if(m.type==='transfer'){$('transfer-notice').classList.add('show');addMsg('sys','Transferring to manager — call +33758780825');setStatus('Call transferred',false);stopVis();}
+    };
+    ws.onerror=()=>{sessionActive=false;addMsg('sys','⚠ Connection error');};
+    ws.onclose=()=>{sessionActive=false;};
+  }catch(e){sessionActive=false;addMsg('sys','⚠ Failed to connect');}
 }
 
-function cleanup() {
-  sessionActive = false;
-  stopRecognition();
-  stopVis();
-  audioQueue = [];
-  playingAudio = false;
-  agentSpeaking = false;
-  statusDot.className = 'status-dot';
-  endBtn.style.display = 'none';
-  micBtn.classList.remove('listening', 'disabled');
-  btnIcon.textContent = '📞';
-  btnLabel.textContent = 'Start Call';
+function toggleMic(){if(sessionActive&&!isListening&&!playingA)startRec();else if(isListening)stopRecognition();}
+function stopRecognition(){if(rec&&isListening)try{rec.stop();}catch(e){}}
+function startRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+  if(!rec){rec=new SR();rec.lang='en-US';rec.interimResults=true;rec.continuous=false;
+    rec.onstart=()=>{isListening=true;$('mic-btn').classList.add('on');$('mic-lbl').textContent='Listening…';startVis('u');setStatus('You are speaking',false);};
+    rec.onend=()=>{isListening=false;$('mic-btn').classList.remove('on');$('mic-lbl').textContent='Tap to speak';};
+    rec.onresult=(e)=>{let f='',it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)f+=t;else it+=t;}$('interim-row').textContent=it||f;if(f.trim()&&ws&&ws.readyState===1){$('interim-row').textContent='';addMsg('user',f.trim());ws.send(JSON.stringify({type:'transcript',text:f.trim()}));setStatus('Sofia is thinking…',false);stopVis();}};}
+  try{rec.start();}catch(e){}
 }
 
-// ── Info panel ────────────────────────────────────────────────────────────
-function toggleInfo() {
-  const panel = document.getElementById('info-panel');
-  panel.classList.toggle('open');
-  if (panel.classList.contains('open')) {
-    loadRestaurantInfo();
-    loadBookings();
-  }
-}
-
-async function loadRestaurantInfo() {
-  try {
-    const res = await fetch('/api/restaurant/1');
-    const data = await res.json();
-    document.getElementById('restaurant-info').innerHTML =
-      `<strong>${data.name}</strong><br>${data.hours}<br><br><em>Menu:</em><br>${data.menu_text.replace(/\n/g,'<br>')}`;
-  } catch(e) {}
-}
-
-async function loadBookings() {
-  try {
-    const res = await fetch('/api/bookings');
-    const bookings = await res.json();
-    const tbody = document.getElementById('bookings-body');
-    if (!bookings.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">No bookings yet.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = bookings.map(b =>
-      `<tr><td>${b.name}</td><td>${b.party_size}</td><td>${b.date}</td><td>${b.time}</td></tr>`
-    ).join('');
-  } catch(e) {}
-}
+function queueAudio(b64){aq.push(b64);if(!playingA)nextAudio();}
+function nextAudio(){if(!aq.length){playingA=false;stopVis();setStatus('Listening…',true);if(sessionActive)startRec();return;}playingA=true;const b=atob(aq.shift());const by=new Uint8Array(b.length);for(let i=0;i<b.length;i++)by[i]=b.charCodeAt(i);const url=URL.createObjectURL(new Blob([by],{type:'audio/mpeg'}));ap.src=url;ap.onended=()=>{URL.revokeObjectURL(url);nextAudio();};ap.play().catch(()=>nextAudio());}
+function endCall(){stopTimer();stopVis();if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:'end_session'}));ws.close();}if(rec&&isListening)try{rec.stop();}catch(e){}goTo('screen-landing');}
 </script>
+</div>
 </body>
 </html>

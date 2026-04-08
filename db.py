@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, DateTime, ForeignKey
+    create_engine, Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from config import DATABASE_URL
@@ -50,6 +50,7 @@ class CallLog(Base):
     session_id = Column(String, nullable=False)
     transcript = Column(Text, nullable=True)
     duration_seconds = Column(Integer, nullable=True)
+    escalated = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     restaurant = relationship("Restaurant", back_populates="call_logs")
