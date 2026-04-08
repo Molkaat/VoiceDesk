@@ -43,7 +43,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    with open("static/index.html") as f:
+    with open("static/index.html", encoding="utf-8") as f:
         return f.read()
 
 
@@ -129,16 +129,25 @@ async def voice_ws(websocket: WebSocket):
 
     try:
         # Send opening greeting
-        greeting = await asyncio.get_event_loop().run_in_executor(
-            None, agent.get_greeting, restaurant_id
-        )
-        audio_bytes = await tts.synthesize(greeting)
-        audio_b64 = base64.b64encode(audio_bytes).decode()
-        await websocket.send_json({
-            "type": "greeting",
-            "text": greeting,
-            "audio_b64": audio_b64,
-        })
+        try:
+            greeting = await asyncio.get_event_loop().run_in_executor(
+                None, agent.get_greeting, restaurant_id
+            )
+            print(f"[GREETING] {greeting}")
+            audio_bytes = await tts.synthesize(greeting)
+            audio_b64 = base64.b64encode(audio_bytes).decode()
+            await websocket.send_json({
+                "type": "greeting",
+                "text": greeting,
+                "audio_b64": audio_b64,
+            })
+        except Exception as e:
+            print(f"[ERROR] Failed to generate/synthesize greeting: {e}")
+            await websocket.send_json({
+                "type": "error",
+                "text": f"Error: {str(e)}",
+            })
+            return
 
         # Main message loop
         while True:
@@ -156,28 +165,37 @@ async def voice_ws(websocket: WebSocket):
                 # Notify client we're thinking
                 await websocket.send_json({"type": "thinking"})
 
-                # Get AI reply (run in executor to avoid blocking event loop)
-                reply = await asyncio.get_event_loop().run_in_executor(
-                    None, agent.chat, session_id, user_text, restaurant_id
-                )
-                print(f"[AGENT] {reply}")
-                transcript_parts.append(f"Agent: {reply}")
+                try:
+                    # Get AI reply (run in executor to avoid blocking event loop)
+                    reply = await asyncio.get_event_loop().run_in_executor(
+                        None, agent.chat, session_id, user_text, restaurant_id
+                    )
+                    print(f"[AGENT] {reply}")
+                    transcript_parts.append(f"Agent: {reply}")
 
-                # Synthesize TTS
-                audio_bytes = await tts.synthesize(reply)
-                audio_b64 = base64.b64encode(audio_bytes).decode()
+                    # Synthesize TTS
+                    audio_bytes = await tts.synthesize(reply)
+                    audio_b64 = base64.b64encode(audio_bytes).decode()
 
-                await websocket.send_json({
-                    "type": "reply",
-                    "text": reply,
-                    "audio_b64": audio_b64,
-                })
+                    await websocket.send_json({
+                        "type": "reply",
+                        "text": reply,
+                        "audio_b64": audio_b64,
+                    })
+                except Exception as e:
+                    print(f"[ERROR] Failed to process message: {e}")
+                    await websocket.send_json({
+                        "type": "error",
+                        "text": f"Error processing message: {str(e)}",
+                    })
 
             elif msg_type == "end_session":
                 break
 
     except WebSocketDisconnect:
         pass
+    except Exception as e:
+        print(f"[ERROR] WebSocket error: {e}")
     finally:
         duration = int(time.time() - start_time)
         full_transcript = "\n".join(transcript_parts)

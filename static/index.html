@@ -491,6 +491,9 @@ function connectWS() {
       if (msg.audio_b64) enqueueAudio(msg.audio_b64);
     } else if (msg.type === 'thinking') {
       addBubble('system', 'Sofia is thinking…');
+    } else if (msg.type === 'error') {
+      addBubble('system', `❌ ${msg.text}`);
+      endCall();
     }
   };
 
