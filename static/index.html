@@ -566,10 +566,16 @@ let aq=[],playingA=false,greetingReceived=false;
 const ap=$('ap');
 
 // Auto-load dashboard when screen is shown
+let dashboardLoaded=false;
 const observer=new MutationObserver(()=>{
   const dash=$('screen-dashboard');
-  if(dash&&dash.classList.contains('active')){loadDashboardData();setInterval(loadDashboardData,30000);}
+  if(dash&&dash.classList.contains('active')&&!dashboardLoaded){
+    dashboardLoaded=true;
+    loadDashboardData();
+    setInterval(loadDashboardData,30000);
+  }
 });
+observer.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class']});
 
 function tryWS(){
   try{
