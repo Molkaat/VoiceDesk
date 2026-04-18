@@ -18,6 +18,9 @@ _booking_state: dict[str, dict] = {}
 # Call context per session: 'new', 'cancel', or 'modify'
 _call_context: dict[str, str] = {}
 
+# Caller phone per session
+_caller_phone: dict[str, str] = {}
+
 
 def _get_restaurant(restaurant_id: int = 1) -> Optional[Restaurant]:
     db = SessionLocal()
@@ -117,9 +120,10 @@ def _save_booking(session_id: str, booking_data: dict, restaurant_id: int = 1):
     db = SessionLocal()
     try:
         party_size = int(booking_data.get("party_size", 1))
+        caller_phone = _caller_phone.get(session_id)  # Get phone from session state
         booking = Booking(
             restaurant_id=restaurant_id,
-            caller_phone=_booking_state.get(session_id, {}).get("caller_phone"),
+            caller_phone=caller_phone,
             name=booking_data.get("name", "Guest"),
             party_size=party_size,
             date=booking_data.get("date"),
@@ -131,7 +135,7 @@ def _save_booking(session_id: str, booking_data: dict, restaurant_id: int = 1):
         print(
             f"\n[BOOKING CONFIRMED] #{booking.id} | "
             f"{booking.name} | party of {booking.party_size} | "
-            f"{booking.date} at {booking.time} | restaurant_id={restaurant_id}\n"
+            f"{booking.date} at {booking.time} | phone={caller_phone} | restaurant_id={restaurant_id}\n"
         )
         return booking
     finally:
@@ -189,6 +193,7 @@ def clear_session(session_id: str):
     _histories.pop(session_id, None)
     _booking_state.pop(session_id, None)
     _call_context.pop(session_id, None)
+    _caller_phone.pop(session_id, None)
 
 
 def set_call_context(session_id: str, context: str):
@@ -198,6 +203,12 @@ def set_call_context(session_id: str, context: str):
         print(f"[CONTEXT SET] Session {session_id}: {context}")
     else:
         print(f"[CONTEXT ERROR] Unknown context: {context}")
+
+
+def set_caller_phone(session_id: str, phone: str):
+    """Store the caller's phone number for this session."""
+    _caller_phone[session_id] = phone
+    print(f"[PHONE SET] Session {session_id}: {phone}")
 
 
 def get_greeting(restaurant_id: int = 1, context: str = "new") -> str:

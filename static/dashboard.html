@@ -206,22 +206,23 @@ function renderBookings(bookings){
   
   list.innerHTML=bookings.slice(0,10).map(b=>{
     const initials=b.name.split(' ').map(n=>n[0]).join('').toUpperCase();
+    const phone=b.caller_phone||'Unknown';
     return `
     <div class="bk-item">
       <div class="bk-avatar">${initials}</div>
       <div class="bk-info">
         <div class="bk-name">${b.name}</div>
         <div class="bk-meta">
-          <div class="bk-meta-item">📅 ${b.date||'TBD'}</div>
-          <div class="bk-meta-item">🕐 ${b.time||'TBD'}</div>
-          <div class="bk-meta-item">👥 ${b.guests||0} guests</div>
-          ${b.special_requests?`<div class="bk-meta-item">📝 ${b.special_requests}</div>`:''}
+          <div class="bk-meta-item">� ${phone}</div>
+          <div class="bk-meta-item">� ${b.date||'TBD'}</div>
+          <div class="bk-meta-item">� ${b.time||'TBD'}</div>
+          <div class="bk-meta-item">� ${b.party_size||0} guests</div>
         </div>
       </div>
       <div class="bk-badge">Confirmed</div>
       <div class="bk-actions">
         <button class="action-btn" onclick="alert('Edit booking: '+${JSON.stringify(b.name)})">Edit</button>
-        <button class="action-btn" onclick="alert('Call '+${JSON.stringify(b.name)})">Call</button>
+        <button class="action-btn" onclick="window.location.href='tel:${phone}'">Call</button>
       </div>
     </div>
     `;
@@ -235,22 +236,23 @@ function renderCalls(calls){
     return;
   }
   
-  const typeIcons={booking:'✓',modification:'↻',faq:'?',escalated:'⚠'};
-  
   list.innerHTML=calls.slice(0,15).map(c=>{
-    const type=c.call_type||'booking';
-    const icon=typeIcons[type]||'•';
+    const type=c.escalated?'escalated':'booking';
+    const typeIcon=c.escalated?'⚠':'✓';
+    const duration=c.duration_seconds?`${Math.floor(c.duration_seconds/60)}m ${c.duration_seconds%60}s`:'—';
+    const timestamp=new Date(c.created_at).toLocaleString();
+    const transcript=c.transcript?c.transcript.substring(0,100)+'...':'Call completed';
     return `
     <div class="call-item">
       <div class="call-top">
-        <div class="call-icon ${type}">${icon}</div>
-        <div class="call-who">${c.caller_phone||'Unknown'}</div>
+        <div class="call-icon ${type}">${typeIcon}</div>
+        <div class="call-who">${c.session_id||'Unknown'}</div>
         <span class="call-tag ${type}">${type}</span>
       </div>
-      <div class="call-text">${c.transcript||c.summary||'Call completed'}</div>
+      <div class="call-text">"${transcript}"</div>
       <div class="call-meta">
-        <span>Duration: ${c.duration||'—'}s</span>
-        <span>${new Date(c.timestamp).toLocaleString()}</span>
+        <span>Duration: ${duration}</span>
+        <span>${timestamp}</span>
       </div>
     </div>
     `;

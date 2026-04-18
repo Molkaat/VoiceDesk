@@ -89,6 +89,7 @@ def list_bookings(restaurant_id: int = 1, db: Session = Depends(get_db)):
     return [
         {
             "id": b.id,
+            "caller_phone": b.caller_phone,
             "name": b.name,
             "party_size": b.party_size,
             "date": b.date,
@@ -142,6 +143,7 @@ async def voice_ws(websocket: WebSocket):
     start_time = time.time()
     call_context = "new"  # Default context
     escalated = False  # Track if call was escalated to manager
+    caller_phone = None  # Store caller's phone number
 
     print(f"[SESSION START] {session_id}")
 
@@ -152,6 +154,13 @@ async def voice_ws(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
             msg_type = data.get("type")
+
+            # Handle caller phone BEFORE greeting
+            if msg_type == "caller_phone":
+                caller_phone = data.get("phone")
+                print(f"[CALLER PHONE] Session {session_id}: {caller_phone}")
+                agent.set_caller_phone(session_id, caller_phone)
+                continue  # Wait for next message
 
             # Handle context message BEFORE greeting
             if msg_type == "context":
