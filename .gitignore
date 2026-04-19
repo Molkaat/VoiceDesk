@@ -43,3 +43,7 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# Google Calendar OAuth
+credentials.json
+token.json

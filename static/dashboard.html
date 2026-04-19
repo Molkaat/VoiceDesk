@@ -70,6 +70,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
 .stat-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--text);line-height:1;}
 .stat-lbl{font-size:10.5px;color:var(--texts);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;font-weight:600;}
 
+/* ROI NOTE */
+.roi-note{font-size:11.5px;color:var(--textm);margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid rgba(196,154,72,0.1);}
+
 /* LAYOUT */
 .col2{display:grid;grid-template-columns:3fr 2fr;gap:1.25rem;}
 
@@ -148,6 +151,26 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
 .call-date{font-size:11px;color:var(--texts);}
 .call-time-val{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--textm);margin-top:1px;}
 
+/* AVAILABILITY GRID */
+.avail-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1rem;min-width:100%;}
+.avail-day{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;}
+.avail-day-head{background:linear-gradient(135deg,rgba(196,154,72,0.15),rgba(196,154,72,0.08));border-bottom:1px solid var(--border);padding:0.75rem;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.avail-day-name{font-weight:600;color:var(--gold);font-size:12px;flex:1;}
+.avail-close-btn{padding:2px 6px;border-radius:5px;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);color:var(--red);font-size:10px;cursor:pointer;transition:all 0.2s;font-weight:600;}
+.avail-close-btn:hover{background:var(--red-dim);border-color:rgba(248,113,113,0.4);}
+.avail-slots{display:flex;flex-direction:column;gap:6px;padding:0.75rem;flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.avail-slot{padding:8px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;gap:8px;font-size:11px;transition:all 0.2s;}
+.avail-slot.closed{background:var(--red-dim);border-color:rgba(248,113,113,0.2);color:var(--textm);text-decoration:line-through;opacity:0.6;}
+.avail-slot:hover{border-color:var(--border2);background:var(--bg3);}
+.avail-slot-time{font-weight:600;color:var(--text);flex-shrink:0;font-family:'Cormorant Garamond',serif;font-size:12px;}
+.avail-slot.closed .avail-slot-time{color:var(--red);}
+.avail-slot-input{width:45px;height:24px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:2px 4px;text-align:center;font-family:monospace;}
+.avail-slot-input:focus{outline:none;border-color:var(--gold);background:var(--bg3);}
+.avail-slot-toggle{width:28px;height:16px;background:var(--border2);border:1px solid var(--border);border-radius:8px;cursor:pointer;position:relative;transition:all 0.2s;display:flex;align-items:center;padding:0 2px;flex-shrink:0;}
+.avail-slot-toggle.active{background:var(--green);border-color:var(--green);}
+.avail-slot-toggle::after{content:'';width:12px;height:12px;background:white;border-radius:6px;transition:transform 0.2s;transform:translateX(0);}
+.avail-slot-toggle.active::after{transform:translateX(12px);}
+
 /* TOAST */
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg4);color:var(--text);padding:0.7rem 1.25rem;border-radius:9px;font-size:13px;border:1px solid var(--border2);box-shadow:0 8px 24px rgba(0,0,0,0.5);opacity:0;transform:translateY(6px);transition:all 0.3s;pointer-events:none;z-index:999;}
 .toast.show{opacity:1;transform:translateY(0);}
@@ -168,12 +191,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
   <span class="header-tag">Voice Command Centre</span>
   <div class="header-space"></div>
   <div class="live-badge"><div class="live-dot"></div>Sofia live</div>
+  <div class="calendar-badge" id="calendar-badge" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(196,154,72,0.1);border:1px solid rgba(196,154,72,0.3);border-radius:6px;font-size:12px;color:var(--text);cursor:pointer;" onclick="handleCalendarBadgeClick()">
+    <span id="calendar-badge-text">Calendar…</span>
+  </div>
+  <div class="preview-badge" id="preview-badge" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(196,154,72,0.1);border:1px solid rgba(196,154,72,0.3);border-radius:6px;font-size:12px;color:var(--text);cursor:pointer;" onclick="togglePreviewMode()">
+    <span id="preview-badge-text">Preview OFF</span>
+  </div>
   <button class="hbtn" onclick="doRefresh(this)">
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 8a7 7 0 1 0 2-4.9M1 3v4h4"/></svg>
     Refresh
   </button>
   <button class="hbtn" onclick="window.location.href='/'">← Back</button>
 </header>
+
+<div class="preview-warning" id="preview-warning" style="display:none;background:rgba(196,154,72,0.2);border-bottom:2px solid rgba(196,154,72,0.5);padding:12px 20px;color:var(--gold);font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;">
+  <span>Warning: Preview mode is active — calls will not create real bookings</span>
+  <button onclick="dismissPreviewWarning()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:16px;padding:0;">✕</button>
+</div>
 
 <main class="main">
 
@@ -183,6 +217,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
     <div class="roi-text">
       <div class="roi-headline">Sofia handled <strong id="roi-calls">—</strong> calls — your team handled zero.</div>
       <div class="roi-sub">Every booking below came in while staff were busy or the restaurant was closed. Zero missed revenue.</div>
+      <div class="roi-note">💡 Revenue estimates based on €<span id="avg-cover-val" style="cursor:pointer;color:var(--gold);font-weight:600;" onclick="editAvgCover()">45</span> avg cover — <span onclick="editAvgCover()" style="cursor:pointer;color:var(--gold);">edit</span></div>
     </div>
     <div class="roi-metrics">
       <div class="roi-metric">
@@ -245,6 +280,41 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
     </div>
   </div>
 
+  <!-- AVAILABILITY SETTINGS -->
+  <div class="panel fade-in" style="animation-delay:0.2s">
+    <div class="panel-head">
+      <span class="ph-icon">⏰</span>
+      <span class="ph-title">Availability Settings</span>
+    </div>
+    <div class="panel-body" id="avail-panel" style="overflow-x:auto; padding:1.5rem;max-height:500px;">
+      <div class="empty"><div class="empty-icon">⏰</div><div class="empty-txt">Loading availability…</div></div>
+    </div>
+  </div>
+
+  <!-- SPECIFIC DATE CLOSURES (OVERRIDES) -->
+  <div class="panel fade-in" style="animation-delay:0.3s">
+    <div class="panel-head">
+      <span class="ph-icon">🚫</span>
+      <span class="ph-title">Close Specific Dates</span>
+    </div>
+    <div class="panel-body" style="padding:1.5rem;">
+      <div style="display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-bottom:1.5rem; align-items:end;">
+        <div>
+          <label style="display:block; font-size:12px; color:var(--gold); margin-bottom:5px; font-weight:600;">Date</label>
+          <input type="date" id="override-date" style="width:100%; padding:8px; background:var(--bg3); border:1px solid var(--border); border-radius:5px; color:var(--text); font-family:inherit;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; color:var(--gold); margin-bottom:5px; font-weight:600;">Reason (optional)</label>
+          <input type="text" id="override-reason" placeholder="e.g., wedding, staff training" style="width:100%; padding:8px; background:var(--bg3); border:1px solid var(--border); border-radius:5px; color:var(--text); font-family:inherit;">
+        </div>
+        <button onclick="createOverride()" style="padding:8px 14px; background:var(--gold); color:var(--bg); border:none; border-radius:5px; cursor:pointer; font-weight:600; font-size:13px;">Close Day</button>
+      </div>
+      <div id="override-list" style="max-height:250px; overflow-y:auto;">
+        <div class="empty"><div class="empty-icon">📋</div><div class="empty-txt">No date closures yet</div></div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <div class="toast" id="toast"></div>
@@ -261,7 +331,43 @@ const rIcon = r => ({complaint:'😤',modify_reservation:'✏️',large_group:'�
 const fmtPhone = p => { if(!p||typeof p!=='string')return null; p=p.trim().replace(/[\s\-\(\)\.]/g,''); return /^[\+\d]{6,}$/.test(p)?p:p; };
 const toast = (m,d=2600) => { const t=ge('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d); };
 
-const AVG_COVER = 45; // € average spend per cover — adjust per restaurant
+let AVG_COVER = 45; // € average spend per cover — load from API or use default
+
+async function loadRestaurant() {
+  try {
+    const r = await fetch('/api/restaurant/1').then(r => r.ok ? r.json() : null);
+    if (r && r.avg_cover) {
+      AVG_COVER = r.avg_cover;
+      document.getElementById('avg-cover-val').textContent = AVG_COVER;
+    }
+  } catch (e) {
+    console.warn('Failed to load restaurant config', e);
+  }
+}
+
+function editAvgCover() {
+  const newVal = prompt('Average cover (€):', AVG_COVER);
+  if (!newVal || isNaN(newVal) || newVal < 1) return;
+  const num = parseInt(newVal, 10);
+  
+  fetch('/api/restaurant/1/avg-cover', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ avg_cover: num })
+  }).then(r => r.ok ? r.json() : null).then(data => {
+    if (data && data.ok) {
+      AVG_COVER = num;
+      document.getElementById('avg-cover-val').textContent = AVG_COVER;
+      toast('✓ Average cover updated to €' + num);
+      loadAll();  // Refresh bookings with new revenue
+    } else {
+      toast('Failed to update average cover');
+    }
+  }).catch(e => {
+    console.error(e);
+    toast('Error updating average cover');
+  });
+}
 
 function renderBookings(data) {
   const list=ge('bk-list'), cnt=ge('bk-count');
@@ -288,7 +394,7 @@ function renderBookings(data) {
       </div>
       <div class="bk-right">
         <div class="bk-time">${b.time||'—'}</div>
-        <div class="bk-rev">${b.party_size} pax · <strong>~€${estRev.toLocaleString()}</strong></div>
+        <div class="bk-rev">${b.party_size} pax · <strong>~€${estRev.toLocaleString()} avg</strong></div>
       </div>
     </div>`;
   }).join('');
@@ -333,6 +439,42 @@ function resolve(id) {
   }).catch(()=>toast('Failed — try again'));
 }
 
+function showTranscript(callId) {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  
+  fetch('/api/call-logs/' + callId + '/transcript').then(r => r.ok ? r.json() : null).then(data => {
+    if (!data) {
+      modal.innerHTML = '<div style="background:var(--bg2);padding:2rem;border-radius:10px;color:var(--text);">Failed to load transcript</div>';
+      document.body.appendChild(modal);
+      setTimeout(() => modal.remove(), 2000);
+      return;
+    }
+    
+    const transcript = (data.transcript || 'No transcript available')
+      .split(/\n+/).map(l => l.trim()).filter(l => l).join('\n');
+    
+    modal.innerHTML = `
+      <div style="background:var(--bg2);padding:2rem;border-radius:10px;max-width:600px;max-height:80vh;overflow-y:auto;border:1px solid var(--border);color:var(--text);">
+        <div style="font-size:1.2rem;font-weight:600;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+          <span>Call transcript</span>
+          <button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;color:var(--text);font-size:1.5rem;cursor:pointer;">×</button>
+        </div>
+        <div style="background:var(--bg3);padding:1rem;border-radius:7px;font-family:monospace;font-size:13px;white-space:pre-wrap;line-height:1.6;color:var(--textm);">${transcript}</div>
+        <div style="margin-top:1rem;font-size:12px;color:var(--texts);">
+          Duration: ${dur(data.duration_seconds || 0)} · Turns: ${data.turns_to_complete || 0}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  }).catch(e => {
+    console.error(e);
+    toast('Failed to load transcript');
+    modal.remove();
+  });
+}
+
 function renderCalls(data) {
   const list=ge('calls-list'), cnt=ge('calls-count');
   if (!data?.length) { cnt.textContent='0'; list.style.display='block'; list.innerHTML='<div class="empty"><div class="empty-icon">📞</div><div class="empty-txt">No calls recorded yet</div></div>'; return; }
@@ -352,11 +494,11 @@ function renderCalls(data) {
       .replace(/\n+/g,' ').trim().substring(0,130);
     const langChip = c.language&&c.language!=='en' ? `<span class="call-chip">${flag(c.language)} ${c.language.toUpperCase()}</span>` : '';
     const turnsChip = c.turns_to_complete ? `<span class="call-chip">💬 ${c.turns_to_complete} turns</span>` : '';
-    return `<div class="call-row">
+    return `<div class="call-row" style="position:relative;">
       <div class="call-icon ${cls}">${icon}</div>
       <div class="call-body">
         <div class="call-top"><span class="call-who">${caller}</span>${statusChip}</div>
-        <div class="call-excerpt">"${raw}"</div>
+        <div class="call-excerpt" onclick="showTranscript(${c.id})" style="cursor:pointer;">"${raw}"</div>
         <div class="call-foot">
           <span class="call-chip">⏱ ${dur(c.duration_seconds)}</span>
           ${turnsChip}${langChip}
@@ -365,9 +507,11 @@ function renderCalls(data) {
       <div class="call-right">
         <div class="call-date">${dte(c.created_at)}</div>
         <div class="call-time-val">${tme(c.created_at)}</div>
+        <button onclick="showTranscript(${c.id})" style="margin-top:8px;padding:4px 10px;background:var(--gold-dim);border:1px solid rgba(196,154,72,0.2);color:var(--gold);border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;">View</button>
       </div>
     </div>`;
   }).join('');
+
 }
 
 function updateStats(bks, calls) {
@@ -391,7 +535,187 @@ function updateStats(bks, calls) {
   ge('roi-rate').textContent=rate+'%';
 }
 
+async function loadAvailability() {
+  try {
+    const slots = await fetch('/api/availability').then(r => r.ok ? r.json() : []);
+    renderAvailability(slots);
+  } catch (e) {
+    console.error('Failed to load availability', e);
+  }
+}
+
+function renderAvailability(slots) {
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  
+  let html = '<div class="avail-grid">';
+  
+  days.forEach((day, idx) => {
+    const daySlots = slots.filter(s => s.day_of_week === day).sort((a, b) => a.slot_time.localeCompare(b.slot_time));
+    const allClosed = daySlots.length > 0 && daySlots.every(s => s.is_closed);
+    
+    html += `<div class="avail-day">
+      <div class="avail-day-head">
+        <span class="avail-day-name">${dayLabels[idx]}</span>
+        <button class="avail-close-btn" onclick="closeEntireDay('${day}')">${allClosed ? 'Open' : 'Close'}</button>
+      </div>
+      <div class="avail-slots">`;
+    
+    if (daySlots.length === 0) {
+      html += '<div style="color:var(--texts);font-size:11px;padding:8px;">No slots</div>';
+    } else {
+      daySlots.forEach(slot => {
+        const toggleClass = slot.is_closed ? '' : 'active';
+        html += `<div class="avail-slot ${slot.is_closed ? 'closed' : ''}">
+          <span class="avail-slot-time">${slot.slot_time}</span>
+          <input type="number" class="avail-slot-input" min="1" max="50" value="${slot.max_covers}" 
+            onchange="updateSlot(${slot.id}, this.value, ${slot.is_closed})">
+          <div class="avail-slot-toggle ${toggleClass}" onclick="toggleSlot(${slot.id}, !${slot.is_closed})"></div>
+        </div>`;
+      });
+    }
+    
+    html += '</div></div>';
+  });
+  
+  html += '</div>';
+  ge('avail-panel').innerHTML = html;
+}
+
+async function updateSlot(slotId, maxCovers, isClosed) {
+  try {
+    const res = await fetch(`/api/availability/${slotId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_covers: parseInt(maxCovers), is_closed: isClosed })
+    });
+    if (res.ok) {
+      toast('✓ Slot updated');
+      loadAvailability();
+    }
+  } catch (e) {
+    console.error('Failed to update slot', e);
+    toast('Failed to update slot');
+  }
+}
+
+async function toggleSlot(slotId, newState) {
+  try {
+    const res = await fetch(`/api/availability/${slotId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_closed: newState })
+    });
+    if (res.ok) {
+      toast(newState ? '⛔ Slot closed' : '✓ Slot open');
+      loadAvailability();
+    }
+  } catch (e) {
+    console.error('Failed to toggle slot', e);
+    toast('Failed to toggle slot');
+  }
+}
+
+async function closeEntireDay(day) {
+  try {
+    const res = await fetch('/api/availability/close-day', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ day_of_week: day, restaurant_id: 1 })
+    });
+    if (res.ok) {
+      toast('✓ Day updated');
+      loadAvailability();
+    }
+  } catch (e) {
+    console.error('Failed to close day', e);
+    toast('Failed to update day');
+  }
+}
+
+async function createOverride() {
+  const dateInput = ge('override-date').value;
+  const reasonInput = ge('override-reason').value;
+  
+  if (!dateInput) {
+    toast('Please select a date');
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/overrides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: dateInput,
+        slot_time: null,  // null = entire day
+        reason: reasonInput || null,
+        restaurant_id: 1
+      })
+    });
+    if (res.ok) {
+      toast('✓ Date closed');
+      ge('override-date').value = '';
+      ge('override-reason').value = '';
+      loadOverrides();
+    } else {
+      const err = await res.json();
+      toast(err.error || 'Failed to create override');
+    }
+  } catch (e) {
+    console.error('Failed to create override', e);
+    toast('Failed to create override');
+  }
+}
+
+async function deleteOverride(overrideId) {
+  try {
+    const res = await fetch(`/api/overrides/${overrideId}`, {
+      method: 'DELETE'
+    });
+    if (res.ok) {
+      toast('✓ Override removed');
+      loadOverrides();
+    }
+  } catch (e) {
+    console.error('Failed to delete override', e);
+    toast('Failed to remove override');
+  }
+}
+
+async function loadOverrides() {
+  try {
+    const res = await fetch('/api/overrides?restaurant_id=1');
+    if (!res.ok) return;
+    const overrides = await res.json();
+    
+    const list = ge('override-list');
+    if (!overrides || overrides.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-txt">No date closures yet</div></div>';
+      return;
+    }
+    
+    list.innerHTML = overrides.map(o => {
+      const dateObj = new Date(o.date + 'T00:00:00');
+      const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const reasonText = o.reason ? `<span style="color:var(--text-dim); font-size:12px;">${o.reason}</span>` : '<span style="color:var(--text-dim); font-size:12px;">No reason given</span>';
+      return `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg3); border-radius:5px; margin-bottom:8px;">
+        <div>
+          <div style="font-weight:600; color:var(--gold);">${dateStr}</div>
+          ${reasonText}
+        </div>
+        <button onclick="deleteOverride(${o.id})" style="padding:4px 10px; background:rgba(196,154,72,0.1); color:var(--gold); border:1px solid rgba(196,154,72,0.3); border-radius:4px; cursor:pointer; font-size:11px;">Remove</button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('Failed to load overrides', e);
+  }
+}
+
 function loadAll() {
+  loadRestaurant();  // Load avg_cover from API
+  loadAvailability(); // Load availability settings
+  loadOverrides();    // Load date overrides
   Promise.all([
     fetch('/api/bookings').then(r=>r.ok?r.json():[]),
     fetch('/api/call-logs').then(r=>r.ok?r.json():[]),
@@ -402,13 +726,114 @@ function loadAll() {
 }
 
 function doRefresh(btn) {
-  btn.classList.add('spin'); loadAll();
+  btn.classList.add('spin'); loadAll(); updateCalendarBadge();
   setTimeout(()=>btn.classList.remove('spin'),700);
   toast('✓ Refreshed');
 }
 
+async function updateCalendarBadge() {
+  try {
+    const res = await fetch('/api/calendar/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    const badge = ge('calendar-badge');
+    const badgeText = ge('calendar-badge-text');
+    
+    if (data.connected) {
+      badge.style.background = 'rgba(76, 175, 80, 0.1)';
+      badge.style.borderColor = 'rgba(76, 175, 80, 0.3)';
+      badgeText.innerHTML = '✓ Calendar synced';
+      badgeText.style.color = '#4CAF50';
+    } else {
+      badge.style.background = 'rgba(196, 154, 72, 0.1)';
+      badge.style.borderColor = 'rgba(196, 154, 72, 0.3)';
+      badgeText.innerHTML = '⚠️ Calendar not connected';
+      badgeText.style.color = 'var(--text)';
+    }
+  } catch (e) {
+    console.error('Failed to update calendar badge', e);
+  }
+}
+
+function handleCalendarBadgeClick() {
+  // Check status and either show info or redirect to auth
+  fetch('/api/calendar/status')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.connected) {
+        toast('Redirecting to Google Calendar authorization...');
+        setTimeout(() => {
+          window.location.href = '/auth/google';
+        }, 1000);
+      } else {
+        toast('✓ Calendar is connected and syncing bookings automatically');
+      }
+    })
+    .catch(e => {
+      console.error('Failed to check calendar status', e);
+      toast('Failed to check calendar status');
+    });
+}
+
+async function updatePreviewBadge() {
+  try {
+    const res = await fetch('/api/restaurant/preview/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    const badge = ge('preview-badge');
+    const badgeText = ge('preview-badge-text');
+    const warning = ge('preview-warning');
+    
+    if (data.preview_mode) {
+      badge.style.background = 'rgba(196, 154, 72, 0.25)';
+      badge.style.borderColor = 'rgba(196, 154, 72, 0.6)';
+      badgeText.innerHTML = 'Preview ON';
+      badgeText.style.color = 'var(--gold)';
+      badgeText.style.fontWeight = '700';
+      warning.style.display = 'flex';
+    } else {
+      badge.style.background = 'rgba(196, 154, 72, 0.1)';
+      badge.style.borderColor = 'rgba(196, 154, 72, 0.3)';
+      badgeText.innerHTML = 'Preview OFF';
+      badgeText.style.color = 'var(--text)';
+      badgeText.style.fontWeight = '600';
+      warning.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('Failed to update preview badge', e);
+  }
+}
+
+async function togglePreviewMode() {
+  try {
+    const res = await fetch('/api/restaurant/preview/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    const endpoint = data.preview_mode ? '/api/restaurant/preview/off' : '/api/restaurant/preview/on';
+    
+    const toggleRes = await fetch(endpoint, { method: 'POST' });
+    if (toggleRes.ok) {
+      const toggleData = await toggleRes.json();
+      toast(toggleData.preview_mode ? 'Preview mode ON - no bookings will be saved' : 'Preview mode OFF');
+      updatePreviewBadge();
+    }
+  } catch (e) {
+    console.error('Failed to toggle preview mode', e);
+    toast('Failed to toggle preview mode');
+  }
+}
+
+function dismissPreviewWarning() {
+  ge('preview-warning').style.display = 'none';
+}
+
+loadRestaurant();  // Load restaurant config on page load
 loadAll();
-setInterval(loadAll,30000);
+updateCalendarBadge();  // Check calendar status on page load
+updatePreviewBadge();   // Check preview mode status on page load
+setInterval(loadAll, 30000);
+setInterval(updateCalendarBadge, 30000);  // Refresh calendar status every 30s
+setInterval(updatePreviewBadge, 30000);   // Refresh preview status every 30s
 </script>
 </body>
 </html>

@@ -229,7 +229,6 @@ body{font-family:'DM Sans',sans-serif;background:#f0ede6;color:var(--text);min-h
           <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M13.5 10.5l-2-.5c-.3-.1-.6 0-.8.2l-.9.9c-1.6-.8-2.8-2.1-3.6-3.6l.9-.9c.2-.2.3-.5.2-.8l-.5-2c-.1-.4-.5-.7-.9-.8H4c-.5 0-.9.4-.9.9 0 7 5.7 12.7 12.7 12.7.5 0 .9-.4.9-.9v-1.8c0-.4-.3-.8-.7-.9z"/></svg>
           Call Sofia
         </button>
-        <button class="change-plans-btn" onclick="showChangePlansModal()">Change in plans?</button>
       </div>
     </div>
   </div>
@@ -362,20 +361,20 @@ body{font-family:'DM Sans',sans-serif;background:#f0ede6;color:var(--text);min-h
 
 <!-- SCREEN 4: DASHBOARD (removed - now at /dashboard) -->
 
-<!-- Change in Plans Modal -->
-<div class="plans-modal" id="plans-modal">
+<!-- Change in Plans Modal (demo only - hidden by default) -->
+<div class="plans-modal" id="plans-modal" style="display:none!important;">
   <div class="plans-modal-card">
     <button class="plans-modal-close" onclick="hidePlansModal()">×</button>
-    <div class="plans-modal-title">Change in plans?</div>
-    <div class="plans-modal-sub">What would you like to do with your reservation?</div>
+    <div class="plans-modal-title">Demo Flows</div>
+    <div class="plans-modal-sub">Test different booking scenarios</div>
     <div class="plans-modal-btns">
       <button class="plans-modal-btn cancel-btn" onclick="startCallWithContext('cancel')">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1c3.866 0 7 3.134 7 7s-3.134 7-7 7-7-3.134-7-7 3.134-7 7-7zm3.364 4.636l-.707.707-2.657 2.657-2.657-2.657-.707-.707-1.414 1.414.707.707 2.657 2.657-2.657 2.657-.707.707 1.414 1.414.707-.707 2.657-2.657 2.657 2.657.707.707 1.414-1.414-.707-.707-2.657-2.657 2.657-2.657.707-.707-1.414-1.414z"/></svg>
-        Cancel reservation
+        Test: Cancel Flow
       </button>
       <button class="plans-modal-btn modify-btn" onclick="startCallWithContext('modify')">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 14.5h11V13h-11v1.5zM11.88 2.88L13.3 1.47c.39-.39 1.02-.39 1.41 0l.62.62c.39.39.39 1.02 0 1.41L14.12 5.22 11.63 8.05 9.29 5.7l2.59-2.82zM2 13l7.29-7.29L11.63 8.05 4.34 15.34H2v-2.34z"/></svg>
-        Modify reservation
+        Test: Modify Flow
       </button>
     </div>
   </div>
@@ -386,8 +385,27 @@ body{font-family:'DM Sans',sans-serif;background:#f0ede6;color:var(--text);min-h
 <script>
 const $=id=>document.getElementById(id);
 
+// Hidden demo trigger: Press 'd' three times quickly to show demo menu
+let demoKeyCount=0,demoKeyTimer=null;
+document.addEventListener('keydown',(e)=>{
+  if(e.key.toLowerCase()==='d'){
+    demoKeyCount++;
+    clearTimeout(demoKeyTimer);
+    demoKeyTimer=setTimeout(()=>{demoKeyCount=0;},500);
+    if(demoKeyCount===3){
+      demoKeyCount=0;
+      showDemoMenu();
+    }
+  }
+});
+
+function showDemoMenu(){
+  $('plans-modal').style.display='flex';
+}
+
 function showChangePlansModal(){$('plans-modal').classList.add('show');}
-function hidePlansModal(){$('plans-modal').classList.remove('show');}
+function hidePlansModal(){$('plans-modal').classList.remove('show');$('plans-modal').style.display='none';}
+
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el=$(id);
@@ -444,6 +462,7 @@ function tryWS(){
     ws.onopen=()=>{
       sessionActive=true;
       // Generate or get caller phone number (demo: random for now)
+      // TODO: Replace with real phone number from Twilio when integrating telephony provider
       const callerPhone=sessionStorage.getItem('callerPhone')||'+'+(1e14+Math.random()*9e14|0);
       sessionStorage.setItem('callerPhone',callerPhone);
       ws.send(JSON.stringify({type:'caller_phone',phone:callerPhone}));

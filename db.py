@@ -20,15 +20,22 @@ class Restaurant(Base):
     personality     = Column(Text,    nullable=False)
     voice_id        = Column(String,  nullable=False)
     menu_text       = Column(Text,    nullable=False)
-    hours           = Column(Text,    nullable=False)
+    hours           = Column(Text,    nullable=False)                 # Human-readable hours (for display)
+    hours_structured = Column(Text,  nullable=True)                   # JSON: {"monday": {"lunch": ["12:00", "14:30"], "dinner": ["18:00", "23:00"]}, ...}
     booking_rules   = Column(Text,    nullable=False)
     faqs            = Column(Text,    nullable=False)
     contact_email   = Column(String,  nullable=True)   # used in system prompt escalation copy
+    max_covers      = Column(Integer, default=50,     nullable=False)  # total seats available
+    avg_cover       = Column(Integer, default=45,     nullable=False)  # average revenue per cover (€) - owner configurable
+    default_language = Column(String(10), default="en", nullable=False)  # ISO 639-1 code: en, fr, ar, etc.
+    preview_mode    = Column(Boolean, default=False,   nullable=False)  # Owner preview mode - skips database writes
 
     bookings  = relationship("Booking",  back_populates="restaurant")
     call_logs = relationship("CallLog",  back_populates="restaurant")
     guests    = relationship("Guest",    back_populates="restaurant")
     transfers = relationship("Transfer", back_populates="restaurant")
+    slot_configs = relationship("SlotConfig", back_populates="restaurant")
+    slot_overrides = relationship("SlotOverride", back_populates="restaurant")
 
 
 class Guest(Base):
@@ -68,6 +75,7 @@ class Booking(Base):
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
     guest_id      = Column(Integer, ForeignKey("guests.id"),      nullable=True)  # null if phone unknown
     call_log_id   = Column(Integer, ForeignKey("call_logs.id"),   nullable=True)  # ties booking to call
+    session_id    = Column(String,  nullable=True, index=True)    # WebSocket session_id - enables safe multi-call booking retrieval
 
     # Core fields (from BOOKING_JSON)
     name          = Column(String,  nullable=False)
@@ -86,6 +94,11 @@ class Booking(Base):
     # status values: confirmed | pending | cancelled | waitlist | no_show
 
     confirmation_sent = Column(Boolean, default=False, nullable=False)
+    
+    # Google Calendar sync
+    calendar_event_id = Column(String, nullable=True)  # Google Calendar event ID
+    calendar_synced   = Column(Boolean, default=False, nullable=False)  # Whether synced to calendar
+    
     created_at    = Column(DateTime, default=datetime.utcnow)
 
     restaurant = relationship("Restaurant", back_populates="bookings")
@@ -142,6 +155,43 @@ class Transfer(Base):
 
     restaurant = relationship("Restaurant", back_populates="transfers")
     call_log   = relationship("CallLog",    back_populates="transfers")
+
+
+class SlotConfig(Base):
+    """
+    Configurable time slots per day per restaurant.
+    Allows owner to set max covers per slot and close slots for private events.
+    """
+    __tablename__ = "slot_configs"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False, index=True)
+    day_of_week   = Column(String,  nullable=False)  # "monday" through "sunday"
+    slot_time     = Column(String,  nullable=False)  # HH:MM format
+    service       = Column(String,  nullable=False)  # "lunch" or "dinner"
+    max_covers    = Column(Integer, default=30,      nullable=False)
+    is_closed     = Column(Boolean, default=False,   nullable=False)
+    created_at    = Column(DateTime, default=datetime.utcnow)
+
+    restaurant = relationship("Restaurant", back_populates="slot_configs")
+
+
+class SlotOverride(Base):
+    """
+    Override slots for specific dates (e.g., 'closed for wedding on Saturday').
+    Overrides SlotConfig rules for specific date.
+    """
+    __tablename__ = "slot_overrides"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False, index=True)
+    date          = Column(String,  nullable=False)  # YYYY-MM-DD format
+    slot_time     = Column(String,  nullable=True)   # HH:MM format, null = entire day closed
+    is_closed     = Column(Boolean, default=True,    nullable=False)
+    reason        = Column(String,  nullable=True)   # "wedding", "staff training", etc.
+    created_at    = Column(DateTime, default=datetime.utcnow)
+
+    restaurant = relationship("Restaurant", back_populates="slot_overrides")
 
 
 def init_db():
