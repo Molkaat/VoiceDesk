@@ -15,12 +15,16 @@ import re
 from datetime import datetime, date, timedelta
 from typing import Optional
 
-from groq import Groq
-from config import GROQ_API_KEY
+from openai import OpenAI
+from config import GEMINI_API_KEY
 from db import SessionLocal, Restaurant, Booking, Guest, Transfer, CallLog
 
-client = Groq(api_key=GROQ_API_KEY)
-MODEL = "llama-3.3-70b-versatile"
+client = OpenAI(
+    api_key=GEMINI_API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+MODEL = "gemini-2.0-flash"
+MODEL = "llama-3.3-70b"
 
 # ── In-memory session state ────────────────────────────────────────────────
 _histories:     dict[str, list[dict]] = {}
