@@ -16,20 +16,18 @@ from sqlalchemy.orm import Session
 
 import agent
 import tts
-from db import init_db, get_db, CallLog, Booking, Restaurant, SessionLocal
+from db import init_db, get_db, CallLog, Booking, Transfer, Restaurant, SessionLocal
 from config import PORT
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    # Seed demo restaurant if needed
     import restaurant_seed
     restaurant_seed.seed()
     yield
 
 
-# Get the directory where this script is located
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="VoiceDesk", lifespan=lifespan)
@@ -41,7 +39,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files using absolute path
 static_dir = BASE_DIR / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
@@ -89,12 +86,18 @@ def list_bookings(restaurant_id: int = 1, db: Session = Depends(get_db)):
     return [
         {
             "id": b.id,
-            "caller_phone": b.caller_phone,
             "name": b.name,
+            "phone": b.phone or b.caller_phone if hasattr(b, "caller_phone") else b.phone,
             "party_size": b.party_size,
             "date": b.date,
             "time": b.time,
-            "created_at": b.created_at.isoformat(),
+            "occasion": b.occasion or "",
+            "special_requests": b.special_requests or "",
+            "has_allergy": b.has_allergy or False,
+            "language": b.language or "en",
+            "status": b.status or "confirmed",
+            "source": b.source or "phone_agent",
+            "created_at": b.created_at.isoformat() + "Z" if b.created_at else "",
         }
         for b in bookings
     ]
@@ -106,29 +109,65 @@ def list_call_logs(restaurant_id: int = 1, db: Session = Depends(get_db)):
         db.query(CallLog)
         .filter(CallLog.restaurant_id == restaurant_id)
         .order_by(CallLog.created_at.desc())
-        .limit(20)
+        .limit(30)
         .all()
     )
     return [
         {
             "id": l.id,
             "session_id": l.session_id,
-            "transcript": l.transcript,
-            "duration_seconds": l.duration_seconds,
-            "escalated": l.escalated,
-            "created_at": l.created_at.isoformat(),
+            "caller_phone": l.caller_phone or "",
+            "transcript": l.transcript or "",
+            "duration_seconds": l.duration_seconds or 0,
+            "turns_to_complete": l.turns_to_complete or 0,
+            "language": l.language or "en",
+            "escalated": l.escalated or False,
+            "escalation_reason": l.escalation_reason or "",
+            "created_at": l.created_at.isoformat() + "Z" if l.created_at else "",
         }
         for l in logs
     ]
 
 
+@app.get("/api/transfers")
+def list_transfers(restaurant_id: int = 1, db: Session = Depends(get_db)):
+    transfers = (
+        db.query(Transfer)
+        .filter(Transfer.restaurant_id == restaurant_id, Transfer.resolved == False)
+        .order_by(Transfer.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    return [
+        {
+            "id": t.id,
+            "reason": t.reason,
+            "caller_name": t.caller_name or "",
+            "callback": t.callback or "",
+            "booking_date": t.booking_date or "",
+            "notes": t.notes or "",
+            "resolved": t.resolved,
+            "created_at": t.created_at.isoformat() + "Z" if t.created_at else "",
+        }
+        for t in transfers
+    ]
+
+
+@app.patch("/api/transfers/{transfer_id}/resolve")
+def resolve_transfer(transfer_id: int, db: Session = Depends(get_db)):
+    t = db.query(Transfer).filter(Transfer.id == transfer_id).first()
+    if not t:
+        return {"error": "not found"}
+    t.resolved = True
+    db.commit()
+    return {"ok": True}
+
+
 @app.get("/api/tts")
 async def tts_endpoint(text: str, voice_id: str = "21m00Tcm4TlvDq8ikWAM"):
-    """Stream TTS audio for a given text snippet."""
     async def audio_stream():
         async for chunk in tts.synthesize_streaming(text, voice_id):
             yield chunk
-
     return StreamingResponse(audio_stream(), media_type="audio/mpeg")
 
 
@@ -141,28 +180,25 @@ async def voice_ws(websocket: WebSocket):
     restaurant_id = 1
     transcript_parts: list[str] = []
     start_time = time.time()
-    call_context = "new"  # Default context
-    escalated = False  # Track if call was escalated to manager
-    caller_phone = None  # Store caller's phone number
+    call_context = "new"
+    escalated = False
+    caller_phone = None
 
     print(f"[SESSION START] {session_id}")
 
     try:
-        # Main message loop (starts before greeting to capture context)
         greeting_sent = False
-        
+
         while True:
             data = await websocket.receive_json()
             msg_type = data.get("type")
 
-            # Handle caller phone BEFORE greeting
             if msg_type == "caller_phone":
                 caller_phone = data.get("phone")
-                print(f"[CALLER PHONE] Session {session_id}: {caller_phone}")
+                print(f"[CALLER PHONE] {session_id}: {caller_phone}")
                 agent.set_caller_phone(session_id, caller_phone)
-                continue  # Wait for next message
+                continue
 
-            # Handle context message BEFORE greeting
             if msg_type == "context":
                 action = data.get("action", "new")
                 if action == "cancel_reservation":
@@ -173,11 +209,10 @@ async def voice_ws(websocket: WebSocket):
                     call_context = "manager"
                 else:
                     call_context = "new"
-                print(f"[CONTEXT] Session {session_id}: {call_context}")
+                print(f"[CONTEXT] {session_id}: {call_context}")
                 agent.set_call_context(session_id, call_context)
-                continue  # Wait for next message
+                continue
 
-            # Send opening greeting (on first non-context message or explicit request)
             if not greeting_sent and msg_type in ["greeting_request", "transcript"]:
                 greeting_sent = True
                 try:
@@ -187,21 +222,20 @@ async def voice_ws(websocket: WebSocket):
                     print(f"[GREETING] {greeting}")
                     audio_bytes = await tts.synthesize(greeting)
                     audio_b64 = base64.b64encode(audio_bytes).decode()
+                    print(f"[AUDIO-GREETING] Generated: {len(audio_bytes)} bytes → {len(audio_b64)} b64 chars")
                     await websocket.send_json({
                         "type": "greeting",
                         "text": greeting,
                         "audio_b64": audio_b64,
                     })
                 except Exception as e:
-                    print(f"[ERROR] Failed to generate/synthesize greeting: {e}")
-                    await websocket.send_json({
-                        "type": "error",
-                        "text": f"Error: {str(e)}",
-                    })
+                    print(f"[ERROR] Greeting failed: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    await websocket.send_json({"type": "error", "text": str(e)})
                     return
 
             if msg_type == "greeting_request":
-                # Already handled above
                 continue
 
             elif msg_type == "transcript":
@@ -211,70 +245,65 @@ async def voice_ws(websocket: WebSocket):
 
                 print(f"[USER] {user_text}")
                 transcript_parts.append(f"User: {user_text}")
-
-                # Notify client we're thinking
                 await websocket.send_json({"type": "thinking"})
 
                 try:
-                    # Get AI reply (run in executor to avoid blocking event loop)
                     reply, manager_requested = await asyncio.get_event_loop().run_in_executor(
                         None, agent.chat, session_id, user_text, restaurant_id
                     )
                     print(f"[AGENT] {reply}")
                     transcript_parts.append(f"Agent: {reply}")
 
-                    # Check if manager transfer was requested
                     if manager_requested:
-                        print(f"[TRANSFER] Manager transfer requested in session {session_id}")
                         escalated = True
                         await websocket.send_json({
                             "type": "transfer",
-                            "manager_phone": "+33 758087825"
+                            "manager_phone": "+33 758087825",
                         })
 
-                    # Check if a booking was just made
+                    # Check for fresh booking (created in last 5s)
                     db = SessionLocal()
+                    booking_confirmation = None
                     try:
-                        latest_booking = db.query(Booking).filter(
-                            Booking.restaurant_id == restaurant_id
-                        ).order_by(Booking.id.desc()).first()
-                        
-                        booking_confirmation = None
-                        if latest_booking:
-                            # Check if this booking is fresh (created in last 5 seconds)
-                            now = datetime.now()
-                            if latest_booking.created_at and (now - latest_booking.created_at) < timedelta(seconds=5):
+                        latest = (
+                            db.query(Booking)
+                            .filter(Booking.restaurant_id == restaurant_id)
+                            .order_by(Booking.id.desc())
+                            .first()
+                        )
+                        if latest and latest.created_at:
+                            age = datetime.now() - latest.created_at
+                            if age < timedelta(seconds=5):
                                 booking_confirmation = {
-                                    "id": latest_booking.id,
-                                    "name": latest_booking.name,
-                                    "date": str(latest_booking.date),
-                                    "time": latest_booking.time,
-                                    "guests": latest_booking.party_size,
+                                    "id": latest.id,
+                                    "name": latest.name,
+                                    "date": str(latest.date),
+                                    "time": latest.time,
+                                    "guests": latest.party_size,
+                                    "occasion": latest.occasion or "",
+                                    "has_allergy": latest.has_allergy or False,
+                                    "special_requests": latest.special_requests or "",
                                 }
                     finally:
                         db.close()
 
-                    # Synthesize TTS
                     audio_bytes = await tts.synthesize(reply)
                     audio_b64 = base64.b64encode(audio_bytes).decode()
+                    print(f"[AUDIO] Generated audio: {len(audio_bytes)} bytes → {len(audio_b64)} b64 chars")
 
                     response_msg = {
                         "type": "reply",
                         "text": reply,
                         "audio_b64": audio_b64,
                     }
-                    
-                    # Add booking data if one was just created
                     if booking_confirmation:
                         response_msg["booking_confirmed"] = booking_confirmation
 
                     await websocket.send_json(response_msg)
+
                 except Exception as e:
-                    print(f"[ERROR] Failed to process message: {e}")
-                    await websocket.send_json({
-                        "type": "error",
-                        "text": f"Error processing message: {str(e)}",
-                    })
+                    print(f"[ERROR] Message processing failed: {e}")
+                    await websocket.send_json({"type": "error", "text": str(e)})
 
             elif msg_type == "end_session":
                 break
@@ -288,9 +317,11 @@ async def voice_ws(websocket: WebSocket):
         full_transcript = "\n".join(transcript_parts)
         db = SessionLocal()
         try:
+            caller_phone = agent.get_caller_phone(session_id)
             log = CallLog(
                 restaurant_id=restaurant_id,
                 session_id=session_id,
+                caller_phone=caller_phone,
                 transcript=full_transcript,
                 duration_seconds=duration,
                 escalated=escalated,
@@ -301,7 +332,7 @@ async def voice_ws(websocket: WebSocket):
             db.close()
 
         agent.clear_session(session_id)
-        print(f"[SESSION END] {session_id} | duration={duration}s | turns={len(transcript_parts)//2}")
+        print(f"[SESSION END] {session_id} | {duration}s | {len(transcript_parts)//2} turns")
 
 
 if __name__ == "__main__":

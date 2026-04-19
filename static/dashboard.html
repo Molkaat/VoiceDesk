@@ -3,279 +3,412 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Restaurant Owner Dashboard — VoiceDesk</title>
+<title>Sofia · La Bella Ristorante — Command Centre</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#faf8f4;--s1:#ffffff;--s2:#f4f1eb;--s3:#ede9e0;
-  --b1:#e8e2d6;--b2:#d4cdc0;
-  --gold:#a07830;--gold2:#c49a48;--goldb:#fdf6e8;
-  --text:#1a1610;--textm:#7a7060;--texts:#b0a898;
-  --red:#c04838;--green:#3a8a40;--greenb:#edf7ee;
+  --bg:#0f0d0a;--bg2:#161310;--bg3:#1e1a15;--bg4:#262018;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --gold:#c49a48;--gold2:#e8c06a;
+  --gold-dim:rgba(196,154,72,0.15);--gold-dim2:rgba(196,154,72,0.08);
+  --text:#f0ead8;--textm:rgba(240,234,216,0.6);--texts:rgba(240,234,216,0.35);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.12);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.12);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.12);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.12);
+  --r:10px;--r2:14px;
 }
-html,body{height:100%;width:100%;}
-body{font-family:'DM Sans',sans-serif;background:linear-gradient(135deg, #f5f3ed 0%, #e8e2d6 100%);color:var(--text);display:flex;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;}
+body{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;opacity:0.018;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px;}
 
-.dash-container{width:100%;height:100%;display:flex;flex-direction:column;background:var(--bg);}
-
-.dash-header{background:var(--s1);border-bottom:1px solid var(--b1);padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
-.dash-header-left{display:flex;align-items:center;gap:1.5rem;}
-.dash-title{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--text);}
-.dash-subtitle{font-size:12px;color:var(--texts);margin-top:0.25rem;}
-.dash-status{display:flex;align-items:center;gap:6px;padding:0.5rem 1rem;background:var(--greenb);border:1px solid #b8debb;border-radius:20px;font-size:12px;color:var(--green);}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-.back-nav{margin-left:auto;display:flex;gap:0.75rem;}
-.nav-btn{padding:0.65rem 1.2rem;border-radius:10px;background:var(--bg);border:1px solid var(--b1);color:var(--textm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
-.nav-btn:hover{border-color:var(--b2);color:var(--text);}
-
-.dash-content{flex:1;overflow-y:auto;padding:2rem;max-width:1400px;margin:0 auto;width:100%;}
-
-.section{margin-bottom:2.5rem;}
-.sec-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
-.sec-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
-
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;}
-.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:1.25rem;text-align:center;transition:all 0.2s;}
-.stat-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(160,120,48,0.08);}
-.stat-value{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:600;color:var(--gold);margin-bottom:0.5rem;}
-.stat-label{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--texts);}
-
-.bookings-section{background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;}
-.bk-header{padding:1rem 1.5rem;border-bottom:1px solid var(--b1);background:var(--s2);}
-.bk-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--texts);margin-bottom:0.5rem;}
-.bk-list{display:flex;flex-direction:column;}
-.bk-item{padding:1rem 1.5rem;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:1rem;transition:all 0.2s;}
-.bk-item:hover{background:var(--s2);}
-.bk-item:last-child{border:none;}
-.bk-avatar{width:44px;height:44px;border-radius:50%;background:var(--goldb);border:1.5px solid #e8d4a0;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);flex-shrink:0;}
-.bk-info{flex:1;}
-.bk-name{font-weight:500;color:var(--text);margin-bottom:0.25rem;}
-.bk-meta{font-size:12px;color:var(--textm);display:flex;gap:1rem;flex-wrap:wrap;}
-.bk-meta-item{display:flex;align-items:center;gap:4px;}
-.bk-actions{display:flex;gap:0.5rem;}
-.action-btn{padding:0.5rem 0.9rem;border-radius:8px;background:var(--bg);border:1px solid var(--b1);color:var(--textm);font-size:12px;cursor:pointer;transition:all 0.2s;}
-.action-btn:hover{border-color:var(--gold2);color:var(--gold);}
-.bk-badge{display:inline-block;padding:0.35rem 0.75rem;background:var(--greenb);border:1px solid #b8debb;border-radius:20px;font-size:10px;color:var(--green);font-weight:500;}
-
-.calls-section{background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;}
-.call-item{padding:1rem 1.5rem;border-bottom:1px solid var(--b1);transition:all 0.2s;}
-.call-item:hover{background:var(--s2);}
-.call-item:last-child{border:none;}
-.call-top{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;}
-.call-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;}
-.call-icon.ok{background:var(--greenb);border:1px solid #b8debb;}
-.call-icon.mod{background:#eef4fe;border:1px solid #b8d0f8;}
-.call-icon.faq{background:var(--goldb);border:1px solid #e8d4a0;}
-.call-icon.escalated{background:#fff8ed;border:1px solid #f0d890;}
-.call-who{font-weight:500;color:var(--text);flex:1;}
-.call-tag{display:inline-block;padding:0.2rem 0.7rem;border-radius:12px;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;}
-.call-tag.ok{background:var(--greenb);color:var(--green);border:1px solid #b8debb;}
-.call-tag.mod{background:#eef4fe;color:#2a5ab8;border:1px solid #b8d0f8;}
-.call-tag.faq{background:var(--goldb);color:var(--gold);border:1px solid #e8d4a0;}
-.call-tag.escalated{background:#fff8ed;color:#7a5a10;border:1px solid #f0d890;}
-.call-text{font-size:12.5px;color:var(--textm);line-height:1.6;margin-bottom:0.5rem;}
-.call-meta{font-size:11px;color:var(--texts);display:flex;gap:1rem;}
-
-.empty-state{text-align:center;padding:3rem 2rem;color:var(--texts);}
-.empty-icon{font-size:2.5rem;margin-bottom:1rem;opacity:0.3;}
-.empty-text{font-size:13px;}
-
-.loading{text-align:center;padding:2rem;color:var(--textm);}
-.spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--b1);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
+/* HEADER */
+.header{background:rgba(15,13,10,0.92);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;gap:1.5rem;position:sticky;top:0;z-index:200;backdrop-filter:blur(20px);}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);white-space:nowrap;}
+.logo em{font-style:italic;color:var(--gold);}
+.logo-sep{color:var(--texts);margin:0 4px;}
+.header-tag{font-size:11px;color:var(--texts);letter-spacing:0.06em;text-transform:uppercase;}
+.header-space{flex:1;}
+.live-badge{display:flex;align-items:center;gap:7px;padding:5px 13px;background:var(--green-dim);border:1px solid rgba(74,222,128,0.25);border-radius:20px;font-size:11.5px;color:var(--green);font-weight:600;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 8px var(--green)}50%{opacity:0.5;box-shadow:0 0 3px var(--green)}}
+.hbtn{padding:6px 14px;border-radius:7px;background:transparent;border:1px solid var(--border2);color:var(--textm);font-family:'DM Sans',sans-serif;font-size:12.5px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.hbtn:hover{border-color:var(--gold);color:var(--gold);}
+.hbtn svg{transition:transform 0.5s;}
+.hbtn.spin svg{animation:spin 0.6s linear;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-@media(max-width:768px){
-  .dash-header{flex-direction:column;align-items:flex-start;gap:1rem;}
-  .dash-header-left{flex-direction:column;gap:0.5rem;}
-  .back-nav{margin-left:0;width:100%;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .dash-content{padding:1rem;}
-}
+/* MAIN */
+.main{flex:1;padding:1.75rem 2rem;max-width:1440px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:1.5rem;}
+
+/* ROI HERO */
+.roi-bar{background:linear-gradient(135deg,#1e1a12 0%,#1a160e 100%);border:1px solid rgba(196,154,72,0.2);border-radius:var(--r2);padding:1.25rem 2rem;display:flex;align-items:center;gap:2.5rem;position:relative;overflow:hidden;}
+.roi-bar::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(196,154,72,0.08) 0%,transparent 70%);pointer-events:none;}
+.roi-icon{width:48px;height:48px;border-radius:12px;background:var(--gold-dim);border:1px solid rgba(196,154,72,0.3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+.roi-text{flex:1;}
+.roi-headline{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);margin-bottom:2px;}
+.roi-headline strong{color:var(--gold2);}
+.roi-sub{font-size:12px;color:var(--textm);}
+.roi-metrics{display:flex;gap:2.5rem;flex-shrink:0;}
+.roi-metric{text-align:right;}
+.roi-val{font-family:'Cormorant Garamond',serif;font-size:1.9rem;color:var(--gold);line-height:1;}
+.roi-lbl{font-size:10.5px;color:var(--texts);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.25rem;display:flex;align-items:center;gap:12px;transition:all 0.25s;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,0.012));pointer-events:none;}
+.stat:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px);}
+.stat-pip{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.stat-pip.gold{background:var(--gold-dim);border:1px solid rgba(196,154,72,0.2);}
+.stat-pip.green{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);}
+.stat-pip.red{background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);}
+.stat-pip.amber{background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2);}
+.stat-pip.blue{background:var(--blue-dim);border:1px solid rgba(96,165,250,0.2);}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--text);line-height:1;}
+.stat-lbl{font-size:10.5px;color:var(--texts);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;font-weight:600;}
+
+/* LAYOUT */
+.col2{display:grid;grid-template-columns:3fr 2fr;gap:1.25rem;}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column;}
+.panel-head{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.02);}
+.ph-icon{font-size:0.95rem;opacity:0.8;}
+.ph-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);flex:1;letter-spacing:0.01em;}
+.ph-pill{font-size:10.5px;font-weight:600;letter-spacing:0.04em;padding:2px 9px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(196,154,72,0.2);color:var(--gold);}
+.ph-pill.green{background:var(--green-dim);border-color:rgba(74,222,128,0.2);color:var(--green);}
+.ph-pill.red{background:var(--red-dim);border-color:rgba(248,113,113,0.2);color:var(--red);}
+.panel-body{flex:1;overflow-y:auto;max-height:440px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+/* EMPTY */
+.empty{padding:3rem 2rem;text-align:center;color:var(--texts);display:flex;flex-direction:column;align-items:center;gap:0.75rem;}
+.empty-icon{font-size:2rem;opacity:0.25;}
+.empty-txt{font-size:12.5px;}
+
+/* BOOKING ROW */
+.bk-row{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;transition:background 0.15s;}
+.bk-row:last-child{border:none;}
+.bk-row:hover{background:var(--bg3);}
+.bk-ava{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:var(--gold-dim);border:1px solid rgba(196,154,72,0.25);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--gold);}
+.bk-info{flex:1;min-width:0;}
+.bk-name{font-weight:600;color:var(--text);font-size:13.5px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.bk-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:3px;}
+.bk-chip{font-size:11.5px;color:var(--textm);display:flex;align-items:center;gap:3px;}
+.bk-note{font-size:11.5px;color:var(--textm);font-style:italic;margin-top:6px;padding:5px 9px;background:var(--bg3);border-radius:6px;border-left:2px solid rgba(196,154,72,0.3);}
+.bk-right{flex-shrink:0;text-align:right;}
+.bk-time{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);line-height:1;}
+.bk-rev{font-size:11px;color:var(--texts);margin-top:4px;}
+.bk-rev strong{color:var(--gold2);}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;letter-spacing:0.02em;white-space:nowrap;}
+.chip.ok{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);color:var(--green);}
+.chip.warn{background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2);color:var(--amber);}
+.chip.danger{background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);color:var(--red);}
+.chip.muted{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--textm);}
+.chip.gold{background:var(--gold-dim);border:1px solid rgba(196,154,72,0.2);color:var(--gold);}
+.chip.blue{background:var(--blue-dim);border:1px solid rgba(96,165,250,0.2);color:var(--blue);}
+
+/* FOLLOW-UP */
+.fu-row{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;transition:background 0.15s;}
+.fu-row:last-child{border:none;}
+.fu-row:hover{background:var(--bg3);}
+.fu-icon{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);}
+.fu-body{flex:1;min-width:0;}
+.fu-name{font-weight:600;color:var(--text);font-size:13px;margin-bottom:4px;}
+.fu-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:5px;}
+.fu-note{font-size:11.5px;color:var(--textm);font-style:italic;line-height:1.45;}
+.fu-time{font-size:10.5px;color:var(--texts);margin-top:5px;}
+.fu-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.btn-sm{padding:5px 11px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;}
+.btn-sm.resolve{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);color:var(--green);}
+.btn-sm.resolve:hover{background:rgba(74,222,128,0.22);}
+.btn-sm.call{background:var(--blue-dim);border:1px solid rgba(96,165,250,0.2);color:var(--blue);}
+.btn-sm.call:hover{background:rgba(96,165,250,0.22);}
+
+/* CALLS */
+.calls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));}
+.call-row{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;transition:background 0.15s;}
+.call-row:last-child{border:none;}
+.call-row:hover{background:var(--bg3);}
+.call-icon{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:1px;}
+.call-icon.ok{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);}
+.call-icon.esc{background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2);}
+.call-icon.comp{background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);}
+.call-body{flex:1;min-width:0;}
+.call-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;}
+.call-who{font-weight:600;color:var(--text);font-size:13px;}
+.call-excerpt{font-size:12px;color:var(--textm);line-height:1.55;max-height:2.2rem;overflow:hidden;mask-image:linear-gradient(to bottom,black 40%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,black 40%,transparent 100%);}
+.call-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+.call-chip{font-size:11px;color:var(--texts);display:flex;align-items:center;gap:3px;}
+.call-right{flex-shrink:0;text-align:right;}
+.call-date{font-size:11px;color:var(--texts);}
+.call-time-val{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--textm);margin-top:1px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg4);color:var(--text);padding:0.7rem 1.25rem;border-radius:9px;font-size:13px;border:1px solid var(--border2);box-shadow:0 8px 24px rgba(0,0,0,0.5);opacity:0;transform:translateY(6px);transition:all 0.3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ANIMATIONS */
+.fade-in{animation:fadeUp 0.4s ease-out both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr);}.col2{grid-template-columns:1fr;}.calls-grid{grid-template-columns:1fr;}}
+@media(max-width:700px){.header{padding:0 1rem;}.main{padding:1rem;}.stats-grid{grid-template-columns:repeat(2,1fr);}.roi-bar{flex-direction:column;align-items:flex-start;gap:1rem;}.roi-metrics{gap:1.5rem;}}
 </style>
 </head>
 <body>
-<div class="dash-container">
 
-  <div class="dash-header">
-    <div class="dash-header-left">
-      <div>
-        <div class="dash-title">La <em style="font-style:italic;color:var(--gold)">Bella</em> — Owner Dashboard</div>
-        <div class="dash-subtitle">Sofia · AI Host · Real-time analytics & reservations</div>
-      </div>
-      <div class="dash-status">
-        <div class="status-dot"></div>
-        <span>Sofia online</span>
-      </div>
+<header class="header">
+  <div class="logo">La <em>Bella</em><span class="logo-sep">·</span></div>
+  <span class="header-tag">Voice Command Centre</span>
+  <div class="header-space"></div>
+  <div class="live-badge"><div class="live-dot"></div>Sofia live</div>
+  <button class="hbtn" onclick="doRefresh(this)">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 8a7 7 0 1 0 2-4.9M1 3v4h4"/></svg>
+    Refresh
+  </button>
+  <button class="hbtn" onclick="window.location.href='/'">← Back</button>
+</header>
+
+<main class="main">
+
+  <!-- ROI HERO BAR -->
+  <div class="roi-bar fade-in">
+    <div class="roi-icon">📟</div>
+    <div class="roi-text">
+      <div class="roi-headline">Sofia handled <strong id="roi-calls">—</strong> calls — your team handled zero.</div>
+      <div class="roi-sub">Every booking below came in while staff were busy or the restaurant was closed. Zero missed revenue.</div>
     </div>
-    <div class="back-nav">
-      <button class="nav-btn" onclick="window.location.href='/'">← Back to homepage</button>
+    <div class="roi-metrics">
+      <div class="roi-metric">
+        <div class="roi-val" id="roi-rev">€—</div>
+        <div class="roi-lbl">Est. revenue protected</div>
+      </div>
+      <div class="roi-metric">
+        <div class="roi-val" id="roi-ah">—</div>
+        <div class="roi-lbl">After-hours calls</div>
+      </div>
+      <div class="roi-metric">
+        <div class="roi-val" id="roi-rate">—%</div>
+        <div class="roi-lbl">Resolved by AI</div>
+      </div>
     </div>
   </div>
 
-  <div class="dash-content">
-
-    <!-- STATISTICS SECTION -->
-    <div class="section">
-      <div class="sec-title">
-        <div class="sec-icon">📊</div>
-        Today's Statistics
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-calls">0</div>
-          <div class="stat-label">Total Calls</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-bookings">0</div>
-          <div class="stat-label">New Bookings</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-mods">0</div>
-          <div class="stat-label">Modifications</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-resolved">0%</div>
-          <div class="stat-label">Resolution Rate</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TODAY'S RESERVATIONS -->
-    <div class="section">
-      <div class="sec-title">
-        <div class="sec-icon">📅</div>
-        Today's Reservations
-      </div>
-      <div class="bookings-section">
-        <div class="bk-header">
-          <div class="bk-label">4 reservations confirmed</div>
-        </div>
-        <div class="bk-list" id="bookings-list">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RECENT CALLS -->
-    <div class="section">
-      <div class="sec-title">
-        <div class="sec-icon">📞</div>
-        Recent Calls
-      </div>
-      <div class="calls-section">
-        <div id="calls-list">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-      </div>
-    </div>
-
+  <!-- STATS -->
+  <div class="stats-grid fade-in" style="animation-delay:0.05s">
+    <div class="stat"><div class="stat-pip gold">📞</div><div><div class="stat-num" id="s-calls">—</div><div class="stat-lbl">Calls today</div></div></div>
+    <div class="stat"><div class="stat-pip green">🍽</div><div><div class="stat-num" id="s-bookings">—</div><div class="stat-lbl">Bookings confirmed</div></div></div>
+    <div class="stat"><div class="stat-pip blue">✓</div><div><div class="stat-num" id="s-rate">—</div><div class="stat-lbl">AI resolution rate</div></div></div>
+    <div class="stat"><div class="stat-pip amber">⏱</div><div><div class="stat-num" id="s-avg">—</div><div class="stat-lbl">Avg call duration</div></div></div>
+    <div class="stat"><div class="stat-pip red">🔁</div><div><div class="stat-num" id="s-esc">—</div><div class="stat-lbl">Needs follow-up</div></div></div>
   </div>
 
-</div>
+  <!-- BOOKINGS + FOLLOW-UP -->
+  <div class="col2 fade-in" style="animation-delay:0.1s">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="ph-icon">📅</span>
+        <span class="ph-title">Today's Reservations</span>
+        <span class="ph-pill green" id="bk-count">—</span>
+      </div>
+      <div class="panel-body" id="bk-list">
+        <div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Loading reservations…</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span class="ph-icon">🔁</span>
+        <span class="ph-title">Follow-up Queue</span>
+        <span class="ph-pill red" id="fu-count">—</span>
+      </div>
+      <div class="panel-body" id="fu-list">
+        <div class="empty"><div class="empty-icon">✅</div><div class="empty-txt">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT CALLS -->
+  <div class="panel fade-in" style="animation-delay:0.15s">
+    <div class="panel-head">
+      <span class="ph-icon">📞</span>
+      <span class="ph-title">Recent Calls</span>
+      <span class="ph-pill" id="calls-count">—</span>
+    </div>
+    <div class="panel-body calls-grid" id="calls-list" style="max-height:420px;">
+      <div class="empty"><div class="empty-icon">📞</div><div class="empty-txt">Loading calls…</div></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const $=id=>document.getElementById(id);
+const ge = id => document.getElementById(id);
+const ini = n => !n?'?':n.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const dur = s => { if(!s)return'—'; const m=Math.floor(s/60),r=s%60; return m>0?m+'m '+r+'s':r+'s'; };
+const tme = iso => { try{return new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});}catch{return'';} };
+const dte = iso => { try{return new Date(iso).toLocaleDateString([],{day:'numeric',month:'short'});}catch{return iso||'';} };
+const flag = c => ({en:'🇬🇧',fr:'🇫🇷',es:'🇪🇸',it:'🇮🇹',de:'🇩🇪',pt:'🇵🇹',nl:'🇳🇱',ar:'🇸🇦',zh:'🇨🇳',ja:'🇯🇵'})[c]||'🌐';
+const rLabel = r => ({complaint:'Complaint',modify_reservation:'Modify booking',large_group:'Large group',caller_requested_human:'Human requested',out_of_scope:'Out of scope',cancel:'Cancellation'})[r]||r;
+const rIcon = r => ({complaint:'😤',modify_reservation:'✏️',large_group:'👥',caller_requested_human:'🙋',out_of_scope:'❓',cancel:'❌'})[r]||'📋';
+const fmtPhone = p => { if(!p||typeof p!=='string')return null; p=p.trim().replace(/[\s\-\(\)\.]/g,''); return /^[\+\d]{6,}$/.test(p)?p:p; };
+const toast = (m,d=2600) => { const t=ge('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d); };
 
-// Load data from API
-async function loadData(){
-  try{
-    const [bookingsRes,callsRes]=await Promise.all([
-      fetch('/api/bookings'),
-      fetch('/api/call-logs')
-    ]);
-    
-    const bookings=await bookingsRes.json();
-    const calls=await callsRes.json();
-    
-    renderBookings(bookings);
-    renderCalls(calls);
-    updateStats(bookings,calls);
-  }catch(e){
-    console.error('Failed to load data:',e);
-  }
+const AVG_COVER = 45; // € average spend per cover — adjust per restaurant
+
+function renderBookings(data) {
+  const list=ge('bk-list'), cnt=ge('bk-count');
+  if (!data?.length) { cnt.textContent='0'; list.innerHTML='<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">No reservations yet today</div></div>'; return; }
+  cnt.textContent = data.length;
+  list.innerHTML = data.map(b => {
+    const phone = fmtPhone(b.phone);
+    const allergy = b.has_allergy ? '<span class="chip warn">⚠ Allergy</span>' : '';
+    const occ = b.occasion ? '<span class="chip blue">🎉 '+b.occasion+'</span>' : '';
+    const lang = b.language && b.language!=='en' ? '<span class="chip muted">'+flag(b.language)+' '+b.language.toUpperCase()+'</span>' : '';
+    const note = b.special_requests ? '<div class="bk-note">'+b.special_requests+'</div>' : '';
+    const phoneHtml = phone ? '<a href="tel:'+phone+'" style="color:inherit;text-decoration:none;">'+phone+'</a>' : '<span style="color:var(--texts)">No phone</span>';
+    const estRev = (b.party_size||0) * AVG_COVER;
+    return `<div class="bk-row">
+      <div class="bk-ava">${ini(b.name)}</div>
+      <div class="bk-info">
+        <div class="bk-name">${b.name||'Unknown'} ${allergy}${occ}${lang}</div>
+        <div class="bk-chips">
+          <span class="bk-chip">📅 ${b.date||'—'}</span>
+          <span class="bk-chip">👥 ${b.party_size} guest${b.party_size!==1?'s':''}</span>
+          <span class="bk-chip">📱 ${phoneHtml}</span>
+        </div>
+        ${note}
+      </div>
+      <div class="bk-right">
+        <div class="bk-time">${b.time||'—'}</div>
+        <div class="bk-rev">${b.party_size} pax · <strong>~€${estRev.toLocaleString()}</strong></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function renderBookings(bookings){
-  const list=$('bookings-list');
-  if(!bookings||bookings.length===0){
-    list.innerHTML='<div class="empty-state"><div class="empty-icon">🍽️</div><div class="empty-text">No reservations yet today</div></div>';
-    return;
-  }
-  
-  list.innerHTML=bookings.slice(0,10).map(b=>{
-    const initials=b.name.split(' ').map(n=>n[0]).join('').toUpperCase();
-    const phone=b.caller_phone||'Unknown';
-    return `
-    <div class="bk-item">
-      <div class="bk-avatar">${initials}</div>
-      <div class="bk-info">
-        <div class="bk-name">${b.name}</div>
-        <div class="bk-meta">
-          <div class="bk-meta-item">� ${phone}</div>
-          <div class="bk-meta-item">� ${b.date||'TBD'}</div>
-          <div class="bk-meta-item">� ${b.time||'TBD'}</div>
-          <div class="bk-meta-item">� ${b.party_size||0} guests</div>
+let _transfers = [];
+function renderFollowup(data) {
+  _transfers = data||[];
+  const list=ge('fu-list'), cnt=ge('fu-count');
+  const pending = _transfers.filter(t=>!t.resolved);
+  cnt.textContent = pending.length;
+  if (!pending.length) { list.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-txt">All follow-ups cleared</div></div>'; return; }
+  list.innerHTML = pending.map(t => {
+    const cb = t.callback ? `<a class="btn-sm call" href="tel:${t.callback}">📞 Call</a>` : '';
+    return `<div class="fu-row" id="fu-${t.id}">
+      <div class="fu-icon">${rIcon(t.reason)}</div>
+      <div class="fu-body">
+        <div class="fu-name">${t.caller_name||'Unknown caller'}</div>
+        <div class="fu-chips">
+          <span class="chip warn">${rLabel(t.reason)}</span>
+          ${t.callback?'<span class="chip muted">📱 '+t.callback+'</span>':''}
+          ${t.booking_date?'<span class="chip muted">📅 '+t.booking_date+'</span>':''}
+        </div>
+        ${t.notes?'<div class="fu-note">"'+t.notes+'"</div>':''}
+        <div class="fu-time">${dte(t.created_at)} ${tme(t.created_at)}</div>
+      </div>
+      <div class="fu-actions">
+        <button class="btn-sm resolve" onclick="resolve(${t.id})">✓ Done</button>
+        ${cb}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function resolve(id) {
+  fetch('/api/transfers/'+id+'/resolve',{method:'PATCH'}).then(r=>{
+    if(r.ok){
+      const el=ge('fu-'+id); if(el){el.style.opacity='0.3';el.style.pointerEvents='none';setTimeout(()=>el.remove(),350);}
+      const cnt=ge('fu-count'); cnt.textContent=Math.max(0,parseInt(cnt.textContent||'0')-1);
+      toast('✓ Follow-up resolved');
+    }
+  }).catch(()=>toast('Failed — try again'));
+}
+
+function renderCalls(data) {
+  const list=ge('calls-list'), cnt=ge('calls-count');
+  if (!data?.length) { cnt.textContent='0'; list.style.display='block'; list.innerHTML='<div class="empty"><div class="empty-icon">📞</div><div class="empty-txt">No calls recorded yet</div></div>'; return; }
+  cnt.textContent=data.length;
+  list.style.display='grid';
+  list.innerHTML = data.map(c => {
+    const isComp = c.escalation_reason==='complaint';
+    const isEsc  = c.escalated && !isComp;
+    const cls    = isComp?'comp':isEsc?'esc':'ok';
+    const icon   = isComp?'😤':isEsc?'⚠️':'✓';
+    const statusChip = c.escalated
+      ? `<span class="chip ${isComp?'danger':'warn'}">${c.escalation_reason?rLabel(c.escalation_reason):'Escalated'}</span>`
+      : `<span class="chip ok">Resolved by AI</span>`;
+    const caller = fmtPhone(c.caller_phone)||'Unknown caller';
+    const raw = (c.transcript||'No transcript available')
+      .replace(/^(USER:|ASSISTANT:|User:|Agent:)\s*/gim,'')
+      .replace(/\n+/g,' ').trim().substring(0,130);
+    const langChip = c.language&&c.language!=='en' ? `<span class="call-chip">${flag(c.language)} ${c.language.toUpperCase()}</span>` : '';
+    const turnsChip = c.turns_to_complete ? `<span class="call-chip">💬 ${c.turns_to_complete} turns</span>` : '';
+    return `<div class="call-row">
+      <div class="call-icon ${cls}">${icon}</div>
+      <div class="call-body">
+        <div class="call-top"><span class="call-who">${caller}</span>${statusChip}</div>
+        <div class="call-excerpt">"${raw}"</div>
+        <div class="call-foot">
+          <span class="call-chip">⏱ ${dur(c.duration_seconds)}</span>
+          ${turnsChip}${langChip}
         </div>
       </div>
-      <div class="bk-badge">Confirmed</div>
-      <div class="bk-actions">
-        <button class="action-btn" onclick="alert('Edit booking: '+${JSON.stringify(b.name)})">Edit</button>
-        <button class="action-btn" onclick="window.location.href='tel:${phone}'">Call</button>
+      <div class="call-right">
+        <div class="call-date">${dte(c.created_at)}</div>
+        <div class="call-time-val">${tme(c.created_at)}</div>
       </div>
-    </div>
-    `;
+    </div>`;
   }).join('');
 }
 
-function renderCalls(calls){
-  const list=$('calls-list');
-  if(!calls||calls.length===0){
-    list.innerHTML='<div class="empty-state"><div class="empty-icon">📞</div><div class="empty-text">No call logs yet</div></div>';
-    return;
-  }
-  
-  list.innerHTML=calls.slice(0,15).map(c=>{
-    const type=c.escalated?'escalated':'booking';
-    const typeIcon=c.escalated?'⚠':'✓';
-    const duration=c.duration_seconds?`${Math.floor(c.duration_seconds/60)}m ${c.duration_seconds%60}s`:'—';
-    const timestamp=new Date(c.created_at).toLocaleString();
-    const transcript=c.transcript?c.transcript.substring(0,100)+'...':'Call completed';
-    return `
-    <div class="call-item">
-      <div class="call-top">
-        <div class="call-icon ${type}">${typeIcon}</div>
-        <div class="call-who">${c.session_id||'Unknown'}</div>
-        <span class="call-tag ${type}">${type}</span>
-      </div>
-      <div class="call-text">"${transcript}"</div>
-      <div class="call-meta">
-        <span>Duration: ${duration}</span>
-        <span>${timestamp}</span>
-      </div>
-    </div>
-    `;
-  }).join('');
+function updateStats(bks, calls) {
+  const total=calls?.length||0, bkCount=bks?.length||0;
+  const esc=calls?.filter(c=>c.escalated).length||0;
+  const rate=total>0?Math.round((total-esc)/total*100):0;
+  const durs=calls?.map(c=>c.duration_seconds).filter(Boolean)||[];
+  const avg=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
+  const covers=bks?.reduce((a,b)=>a+(b.party_size||0),0)||0;
+  const afterHours=calls?.filter(c=>{try{const h=new Date(c.created_at).getHours();return h<12||h>=23;}catch{return false;}}).length||0;
+
+  ge('s-calls').textContent=total;
+  ge('s-bookings').textContent=bkCount;
+  ge('s-rate').textContent=rate+'%';
+  ge('s-avg').textContent=dur(avg);
+  ge('s-esc').textContent=esc;
+
+  ge('roi-calls').textContent=total;
+  ge('roi-rev').textContent='€'+(covers*AVG_COVER).toLocaleString();
+  ge('roi-ah').textContent=afterHours;
+  ge('roi-rate').textContent=rate+'%';
 }
 
-function updateStats(bookings,calls){
-  $('stat-bookings').textContent=bookings?bookings.length:0;
-  $('stat-calls').textContent=calls?calls.length:0;
-  
-  const mods=calls?calls.filter(c=>c.call_type==='modification').length:0;
-  $('stat-mods').textContent=mods;
-  
-  const resolved=calls?calls.filter(c=>!c.escalated).length:0;
-  const rate=calls&&calls.length>0?Math.round(resolved/calls.length*100):0;
-  $('stat-resolved').textContent=rate+'%';
+function loadAll() {
+  Promise.all([
+    fetch('/api/bookings').then(r=>r.ok?r.json():[]),
+    fetch('/api/call-logs').then(r=>r.ok?r.json():[]),
+    fetch('/api/transfers').then(r=>r.ok?r.json():[]),
+  ]).then(([bks,calls,trans])=>{
+    renderBookings(bks); renderCalls(calls); renderFollowup(trans); updateStats(bks,calls);
+  }).catch(e=>{console.error(e);toast('Failed to load — check server');});
 }
 
-// Load on page load
-loadData();
+function doRefresh(btn) {
+  btn.classList.add('spin'); loadAll();
+  setTimeout(()=>btn.classList.remove('spin'),700);
+  toast('✓ Refreshed');
+}
 
-// Refresh every 30 seconds
-setInterval(loadData,30000);
+loadAll();
+setInterval(loadAll,30000);
 </script>
 </body>
 </html>
